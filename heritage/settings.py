@@ -181,3 +181,15 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME': timedelta(hours=1),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
+
+EMAIL_BACKEND = 'anymail.backends.amazon_ses.EmailBackend'
+
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+
+ANYMAIL = {
+    "AMAZON_SES_CLIENT_PARAMS": {
+        "aws_access_key_id": os.getenv('AWS_ACCESS_KEY_ID'),
+        "aws_secret_access_key": os.getenv('AWS_SECRET_ACCESS_KEY'),
+        "region_name": os.getenv('AWS_DEFAULT_REGION'),
+    }
+}
