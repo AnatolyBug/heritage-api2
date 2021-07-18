@@ -53,8 +53,8 @@ class UserSingUpView(APIView):
             user.save()
         except IntegrityError as e:
             return Response({
-                'message': 'Email already exists.',
-                'errors': {'email': 'Email already exists.'}
+                'message': 'This user already exists.',
+                'errors': {'Email or Username already exists.'}
             }, status=status.HTTP_400_BAD_REQUEST)
 
         try:
