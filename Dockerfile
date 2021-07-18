@@ -18,19 +18,10 @@ COPY requirements.txt .
 #now copy all the files in this directory to \code
 ADD . .
 
-#https://stackoverflow.com/questions/67444811/docker-unable-to-find-a-version-that-satisfies-the-requirement-mysqlclient-2
-RUN set -eux && \
-    export DEBIAN_FRONTEND=noninteractive && \
-    apt-get update && \
-    apt-get install -y default-libmysqlclient-dev build-essential && \
-    rm -rf /var/lib/apt/lists/*
+#https://testdriven.io/blog/dockerizing-django-with-postgres-gunicorn-and-nginx/
+RUN apt-get update && apt-get install -y postgresql-server-dev-all gcc python3-dev musl-dev
 
-#pip install
 RUN pip install -r requirements.txt
 
-#Listen to port 5000 at run time
-EXPOSE 8000
-
-#start the app server
 #CMD python manage.py runserver
 CMD gunicorn --bind 0.0.0.0:8000 heritage.wsgi:application -k eventlet

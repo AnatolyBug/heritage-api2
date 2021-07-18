@@ -59,8 +59,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware'
 ]
 
 ROOT_URLCONF = 'heritage.urls'
@@ -90,12 +89,12 @@ WSGI_APPLICATION = 'heritage.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'heritage_db',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'admin',
         'USER': 'root',
-        'PASSWORD': 'password123$%^',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'PASSWORD': 'root',
+        'HOST': 'db',
+        'PORT': '5432',
     }
 }
 
@@ -148,6 +147,9 @@ MEDIA_URL = '/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
+CORS_ORIGIN_ALLOW_ALL = True
+
 AUTH_USER_MODEL = 'auths.User'
 
 # Rest Framework
@@ -181,3 +183,4 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME': timedelta(hours=1),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
+

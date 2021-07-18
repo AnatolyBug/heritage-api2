@@ -7,7 +7,7 @@ services:
     volumes:
       - .:/heritage-api2
     links:
-      - db:mongodb
+      - db:postgres
     container_name: heritageapi_web_1
     depends_on:
       - db
@@ -15,20 +15,20 @@ services:
       - app-tier
 
   db:
-    image: mysql:5.7.22
+    image: postgres:13.3
     container_name: heritageapi_db_1
     restart: always
     networks:
       - app-tier
     environment:
-      MYSQL_DATABASE: admin
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root
-      MYSQL_ROOT_PASSWORD: root
+      POSTGRES_DATABASE: admin
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_ROOT_PASSWORD: root
     volumes:
-      - .dbdata:/var/lib/mysql
+      - .dbdata:/var/lib/postgres
     ports:
-      - 33066:3306
+      - 54322:5432
 
 networks:
   app-tier:
