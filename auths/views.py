@@ -44,6 +44,7 @@ class UserSingUpView(APIView):
                 'message': 'Some fields are missing',
                 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         data = serializer.validated_data
+        email_verification_num = randint(100000, 999999)
         try:
             user = User.objects.create(
                 email=data['email'], first_name=data['first_name'], username=data['username'],
@@ -52,22 +53,22 @@ class UserSingUpView(APIView):
             user.save()
         except IntegrityError as e:
             return Response({
-                'message': 'Email already exists.',
-                'errors': {'email': 'Email already exists.'}
+                'message': 'This user already exists.',
+                'errors': {'Email or Username already exists.'}
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # try:
-        #     name = user.first_name + ' ' + user.last_name
-        #     message = render_to_string('email_verification.html', {
-        #         'name': name,
-        #         'email_verification_code': num
-        #     })
-        #
-        #     email = EmailMessage(
-        #         'Email verification', message, to=[user.email]
-        #     )
-        #     email.send()
-        # except Exception:
-        #     pass
+        try:
+            name = user.first_name + ' ' + user.last_name
+            message = render_to_string('email_verification.html', {
+                'name': name,
+                'email_verification_code': email_verification_num
+            })
+
+            email = EmailMessage(
+                'Email verification', message, to=[user.email]
+            )
+            email.send()
+        except Exception:
+            pass
 
         return Response(data=UserSerializer(user).data, status=status.HTTP_201_CREATED)
