@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.auth.models import AbstractUser
 from .managers import UserManager
+from places.models import Place
+# from guides.models import Guide
 
 
 class User(AbstractUser):
@@ -16,10 +18,16 @@ class User(AbstractUser):
     email_confirmed = models.BooleanField(default=False)
     email_verification_id = models.CharField(max_length=30, blank=True)
     saved_places = ArrayField(
-        models.CharField(max_length=255, blank=True)
+        models.ForeignKey(Place, related_name='place', on_delete=models.CASCADE),
+        blank=True,
+        null=True
     )
+
+    # No Guide models yet
     saved_guides = ArrayField(
-        models.CharField(max_length=255, blank=True)
+        models.ForeignKey(Place, related_name='guide', on_delete=models.CASCADE),
+        blank=True,
+        null=True
     )
     profile_image = models.ImageField(upload_to='avatar', blank=True)
     is_active = models.BooleanField(default=False)
