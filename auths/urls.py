@@ -8,6 +8,8 @@ router = DefaultRouter()
 urlpatterns = [
     path('login/', views.MyTokenObtainPairView.as_view(), name='login'),
     path('register/', views.UserSingUpView.as_view(), name='register'),
+    path('forgot_password/', views.ForgotPasswordView.as_view(), name='forgot_password'),
+    path('reset_password/', views.ResetPasswordView.as_view(), name='forgot_password'),
     path('email_verification', views.EmailVerificationView.as_view(), name='email_verification'),
     path('token-refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
