@@ -1,13 +1,15 @@
 from django.core.mail import EmailMessage
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.db import IntegrityError
-from django.template.loader import render_to_string
+from django.utils.encoding import force_bytes, force_text
+from django.template.loader import get_template
 from rest_framework import permissions, generics, status
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import User
+from .utils import TokenGenerator
 from .serializers import MyTokenObtainPairSerializer, UserSerializer, CreateUserSerializer
-from random import randint
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -44,10 +46,9 @@ class UserSingUpView(APIView):
                 'message': 'Some fields are missing',
                 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         data = serializer.validated_data
-        email_verification_num = randint(100000, 999999)
         try:
             user = User.objects.create(
-                email=data['email'], first_name=data['first_name'], username=data['username'],
+                email=data['email'], first_name=data['first_name'], username=data['username'].lower(),
                 last_name=data['last_name'], bio=data['bio'])
             user.set_password(data['password'])
             user.save()
@@ -57,18 +58,96 @@ class UserSingUpView(APIView):
                 'errors': {'Email or Username already exists.'}
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        email_verification_url = '%s/api/auth/email_verification?uid=%s&token=%s' % (
+            request.build_absolute_uri('/')[:-1],
+            urlsafe_base64_encode(force_bytes(user.pk)),
+            TokenGenerator().make_token(user)
+        )
         try:
             name = user.first_name + ' ' + user.last_name
-            message = render_to_string('email_verification.html', {
+            message_body = ({
                 'name': name,
-                'email_verification_code': email_verification_num
+                'email_verification_url': email_verification_url
             })
-
+            message = get_template('email_verification.html').render(message_body)
             email = EmailMessage(
                 'Email verification', message, to=[user.email]
             )
+            email.content_subtype = 'html'
             email.send()
         except Exception:
             pass
 
         return Response(data=UserSerializer(user).data, status=status.HTTP_201_CREATED)
+
+
+class EmailVerificationView(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    @staticmethod
+    def get(request):
+        try:
+            uid = force_text(urlsafe_base64_decode(request.query_params['uid']))
+            user = User.objects.get(pk=uid)
+            if user is None or not TokenGenerator().check_token(user, request.query_params['token']):
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            user.email_confirmed = True
+            user.save()
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ForgotPasswordView(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    @staticmethod
+    def post(request):
+        email = request.data['email']
+        check_user = User.objects.filter(email=email).exists()
+
+        if check_user:
+            user = User.objects.get(email=email)
+            password_reset_url = '%s/login/reset_password?uid=%s&token=%s' % (
+                request.build_absolute_uri('/')[:-1],
+                urlsafe_base64_encode(force_bytes(user.pk)),
+                TokenGenerator().make_token(user)
+            )
+
+            try:
+                name = user.first_name + ' ' + user.last_name
+                message_body = ({
+                    'name': name,
+                    'password_reset_url': password_reset_url
+                })
+                message = get_template('reset_password.html').render(message_body)
+                email = EmailMessage(
+                    'Email verification', message, to=[user.email]
+                )
+                email.content_subtype = 'html'
+                email.send()
+            except Exception:
+                pass
+            return Response(status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+class ResetPasswordView(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    @staticmethod
+    def post(request, *args, **kwargs):
+        try:
+            uid = force_text(urlsafe_base64_decode(request.data['uid']))
+            user = User.objects.get(pk=uid)
+
+            if user is None or not TokenGenerator().check_token(user, request.data['token']):
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+
+            user.set_password(request.data['password'])
+            user.save()
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
