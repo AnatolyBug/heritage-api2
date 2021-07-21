@@ -2,7 +2,7 @@ from django.core.mail import EmailMessage
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.db import IntegrityError
 from django.utils.encoding import force_bytes, force_text
-from django.template.loader import render_to_string
+from django.template.loader import get_template
 from rest_framework import permissions, generics, status
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.views import APIView
@@ -66,14 +66,15 @@ class UserSingUpView(APIView):
         )
         try:
             name = user.first_name + ' ' + user.last_name
-            message = render_to_string('email_verification.html', {
+            message_body = ({
                 'name': name,
                 'email_verification_url': email_verification_url
             })
-
+            message = get_template('email_verification.html').render(message_body)
             email = EmailMessage(
                 'Email verification', message, to=[user.email]
             )
+            email.content_subtype = 'html'
             email.send()
         except Exception:
             pass
@@ -85,7 +86,7 @@ class EmailVerificationView(APIView):
     permission_classes = (permissions.AllowAny,)
 
     @staticmethod
-    def post(request):
+    def get(request):
         try:
             uid = force_text(urlsafe_base64_decode(request.data['uid']))
             user = User.objects.get(pk=uid)

@@ -8,7 +8,7 @@ router = DefaultRouter()
 urlpatterns = [
     path('login/', views.MyTokenObtainPairView.as_view(), name='login'),
     path('register/', views.UserSingUpView.as_view(), name='register'),
-    path('email_verification/', views.EmailVerificationView.as_view(), name='email_verification'),
+    path('email_verification', views.EmailVerificationView.as_view(), name='email_verification'),
     path('token-refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
 

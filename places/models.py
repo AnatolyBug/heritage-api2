@@ -25,5 +25,5 @@ class Place(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=['live', 'user'])
+            models.Index(fields=['live'])
         ]
