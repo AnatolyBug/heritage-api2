@@ -15,13 +15,19 @@ class UserViewSet(viewsets.ViewSet):
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
     @staticmethod
+    def retrieve(request, pk=None):
+        user = User.objects.get(pk=pk)
+        serializer = UserSerializer(user)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+    @staticmethod
     def update(request, pk=None):
         user = User.objects.get(pk=pk)
         try:
+            user.username = request.data['username']
             user.first_name = request.data['first_name']
             user.last_name = request.data['last_name']
             user.email = request.data['email']
-            user.username = request.data['username']
             user.save()
         except IntegrityError:
             return Response({
