@@ -12,6 +12,7 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=30, blank=True)
     bio = models.CharField(max_length=255, blank=True)
+    user_role = models.CharField(max_length=10, default='customer')
     email_confirmed = models.BooleanField(default=False)
     email_verification_id = models.CharField(max_length=30, blank=True)
     saved_places = models.ManyToManyField('places.Place', related_name='place')
