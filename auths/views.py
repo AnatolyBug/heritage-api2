@@ -16,7 +16,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
 
-class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView):
+class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
     serializer_class = UserSerializer
 
     def get_object(self):
@@ -33,6 +33,11 @@ class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView):
 
     def patch(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class UserSingUpView(APIView):
