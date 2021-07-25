@@ -47,7 +47,9 @@ INSTALLED_APPS = [
     'users',
     'auths',
     'places',
-    'guides'
+    'guides',
+    'travels',
+    'relationships'
 ]
 
 MIDDLEWARE = [

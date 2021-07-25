@@ -26,6 +26,6 @@ urlpatterns = static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + [
     path('admin/', admin.site.urls),
     path('api/auth/', include('auths.urls')),
     path('api/users/', include('users.urls')),
-    path('api/places/', include('places.urls')),
+    path('api/relationships/', include('relationships.urls')),
     re_path(r'.*', generic.TemplateView.as_view(template_name='index.html')),
 ]
