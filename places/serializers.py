@@ -12,6 +12,7 @@ class PlaceSerializer(serializers.ModelSerializer):
 
 
 class CreatePlaceSerializer(serializers.Serializer):
-    #amount = serializers.IntegerField(required=True, min_value=0, null=True)
-    #name = serializers.CharField(required=True, max_length=128)
-    pass
+
+    class Meta:
+        model = Place
+        fields = 'name', 'type', 'description', 'address', 'images', 'price_category', 'friendly_tags',
