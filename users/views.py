@@ -1,4 +1,6 @@
 from django.db import IntegrityError
+from django.core import serializers
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from auths.models import User
@@ -11,15 +13,34 @@ class UserViewSet(viewsets.ViewSet):
     def list(request):
         user_id = request.user.id
         user_role = request.user.user_role
+
         if user_role == 'superuser':
-            users = User.objects.exclude(id=user_id).order_by('-created_date')
-            serializer = UserSerializer(users, many=True)
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
+            user_list = User.objects.exclude(id=user_id).order_by('-created_date')
         else:
             get_users = User.objects.exclude(id=user_id)
-            users = get_users.filter(user_role='customer').order_by('-created_date')
-            serializer = UserSerializer(users, many=True)
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
+            user_list = get_users.filter(user_role='customer').order_by('-created_date')
+
+        page = request.query_params['page']
+        paginator = Paginator(user_list, 20)
+
+        try:
+            users = paginator.page(page)
+        except PageNotAnInteger:
+            users = paginator.page(1)
+        except EmptyPage:
+            users = paginator.page(paginator.num_pages)
+
+        previous_page = users.has_previous()
+        next_page = users.has_next()
+        total = paginator.num_pages
+        data = UserSerializer(users, many=True).data
+
+        return Response({
+            'data': data,
+            'previous_page': previous_page,
+            'next_page': next_page,
+            'total': total
+        }, status=status.HTTP_200_OK)
 
     @staticmethod
     def retrieve(request, pk=None):
@@ -34,7 +55,7 @@ class UserViewSet(viewsets.ViewSet):
         if user_role == 'superuser' or user_role == 'admin':
             user = User.objects.get(pk=pk)
             try:
-                user.username = request.data['username']
+                user.username = request.data['username'].lower()
                 user.first_name = request.data['first_name']
                 user.last_name = request.data['last_name']
                 user.email = request.data['email']
