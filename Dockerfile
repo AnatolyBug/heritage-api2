@@ -19,9 +19,12 @@ COPY requirements.txt .
 ADD . .
 
 #https://testdriven.io/blog/dockerizing-django-with-postgres-gunicorn-and-nginx/
-RUN apt-get update && apt-get install -y postgresql-server-dev-all gcc python3-dev musl-dev
+RUN apt-get update && \
+ apt-get install -y postgresql-server-dev-all gcc python3-dev musl-dev && \
+ pip install -r requirements.txt && \
+ adduser --disabled-password --no-create-home app
 
-RUN pip install -r requirements.txt
+USER app
 
 #CMD python manage.py runserver
 CMD gunicorn --bind 0.0.0.0:8000 heritage.wsgi:application -k eventlet

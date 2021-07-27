@@ -7,19 +7,19 @@ services:
     volumes:
       - .:/heritage-api2
     links:
-      - db:postgres
+      - db:db
     container_name: heritageapi_web_1
     depends_on:
       - db
     networks:
-      - app-tier
+      - heritage-network
 
   db:
     image: postgres:13.3
     container_name: heritageapi_db_1
     restart: always
     networks:
-      - app-tier
+      - heritage-network
     environment:
       POSTGRES_DATABASE: admin
       POSTGRES_USER: root
@@ -28,8 +28,8 @@ services:
     volumes:
       - .dbdata:/var/lib/postgres
     ports:
-      - 5432:5432
+      - "32768:5432"
 
 networks:
-  app-tier:
+  heritage-network:
     driver: bridge

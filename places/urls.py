@@ -5,6 +5,6 @@ from places import views
 router = DefaultRouter()
 
 urlpatterns = [
-    path('', views.PlaceView.as_view(), name='pace_create'),
+    path('', views.PlaceView.as_view(), name='place_create'),
 ]
 urlpatterns += router.urls
