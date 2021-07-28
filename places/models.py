@@ -1,8 +1,9 @@
-from django.db import models
+#from django.db import models
 from .choices import PLACE_TYPES, FRIENDLY_TAGS, PRICE_CATEGORIES
 from datetime import datetime, timedelta
 from django.contrib.postgres.fields import ArrayField
 #from auths.models import User
+from django.contrib.gis.db import models
 
 
 class Place(models.Model):
@@ -15,7 +16,7 @@ class Place(models.Model):
     description = models.TextField(db_column="d", max_length=1000, null=True)
     address = models.JSONField(db_column="a", blank=False)
     images = ArrayField(db_column='ii', null=True, base_field=models.ImageField())
-    #geo = models.PointField(db_field="geo", auto_index=False)
+    geo = models.PointField(db_column="geo")
     price_category = models.IntegerField(db_column="p", choices=PRICE_CATEGORIES, blank=False)
     created = models.DateTimeField(db_column="c", default=datetime.utcnow, blank=False)
     live = models.BooleanField(db_column="l", default=True, blank=False)

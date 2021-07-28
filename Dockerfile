@@ -20,7 +20,7 @@ ADD . .
 
 #https://testdriven.io/blog/dockerizing-django-with-postgres-gunicorn-and-nginx/
 RUN apt-get update && \
- apt-get install -y postgresql-server-dev-all gcc python3-dev musl-dev && \
+ apt-get install -y libgdal-dev postgresql-server-dev-all gcc python3-dev musl-dev && \
  pip install -r requirements.txt && \
  adduser --disabled-password --no-create-home app
 

@@ -15,8 +15,8 @@ services:
       - heritage-network
 
   db:
-    image: postgres:13.3
-    container_name: heritageapi_db_1
+    image: postgis/postgis:13-master
+    container_name: heritagedb_1
     restart: always
     networks:
       - heritage-network
