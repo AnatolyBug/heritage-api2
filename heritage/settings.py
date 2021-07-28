@@ -49,7 +49,8 @@ INSTALLED_APPS = [
     'places',
     'guides',
     'travels',
-    'relationships'
+    'relationships',
+    'search'
 ]
 
 MIDDLEWARE = [
