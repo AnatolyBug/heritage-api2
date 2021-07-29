@@ -1,4 +1,4 @@
-from .models import PlaceTypes, FriendlyTags, PriceCategories
+from .models import PlaceTypes, PriceCategories
 from rest_framework import serializers
 
 
@@ -11,17 +11,6 @@ class PlaceTypeSerializer(serializers.ModelSerializer):
 
 class CreatePlaceTypeSerializer(serializers.Serializer):
     place_type = serializers.CharField()
-
-
-class FriendlyTagSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = FriendlyTags
-        fields = '__all__'
-
-
-class CreateFriendlyTagSerializer(serializers.Serializer):
-    tag_name = serializers.CharField()
 
 
 class PriceCategorySerializer(serializers.ModelSerializer):

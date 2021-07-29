@@ -1,10 +1,9 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
-from places import views
+from guides import views
 
 router = DefaultRouter()
-router.register('types', views.PlaceTypeViewSet, basename='place_type')
-router.register('price_category', views.PriceCategoriesViewSet, basename='price_category')
+router.register('friendly_tags', views.FriendlyTagViewSet, basename='friendly_tag')
 
 urlpatterns = [
     # path('place/', views.PlaceView.as_view(), name='place'),

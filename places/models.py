@@ -11,14 +11,6 @@ class PlaceTypes(models.Model):
         db_table = 'place_types'
 
 
-class FriendlyTags(models.Model):
-    tag_name = models.CharField(max_length=30, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-
-    class Meta:
-        db_table = 'friendly_tags'
-
-
 class PriceCategories(models.Model):
     category_name = models.CharField(max_length=50, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
@@ -30,8 +22,6 @@ class PriceCategories(models.Model):
 class Place(models.Model):
     place_type = models.ForeignKey(
         PlaceTypes, related_name='price_type', on_delete=models.CASCADE, blank=True, null=True)
-    friendly_tag = models.ForeignKey(
-        FriendlyTags, related_name='friendly_tag', on_delete=models.CASCADE, blank=True, null=True)
     price_category = models.ForeignKey(
         PriceCategories, related_name='price_category', on_delete=models.CASCADE, blank=True, null=True)
 
