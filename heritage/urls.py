@@ -28,6 +28,7 @@ urlpatterns = static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + [
     path('api/users/', include('users.urls')),
     path('api/relationships/', include('relationships.urls')),
     path('api/places/', include('places.urls')),
+    path('api/guides/', include('guides.urls')),
     path('api/search/', include('search.urls')),
     re_path(r'.*', generic.TemplateView.as_view(template_name='index.html')),
 ]

@@ -2,9 +2,9 @@ from django.db import IntegrityError
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.response import Response
-from .models import PlaceTypes, FriendlyTags, PriceCategories
+from .models import PlaceTypes, PriceCategories, Places
 from .serializers import PlaceTypeSerializer, CreatePlaceTypeSerializer, \
-    FriendlyTagSerializer, CreateFriendlyTagSerializer, CreatePriceCategorySerializer, PriceCategorySerializer
+    CreatePriceCategorySerializer, PriceCategorySerializer, PlaceSerializer, CreatePlaceSerializer
 
 
 class PlaceTypeViewSet(viewsets.ViewSet):
@@ -71,69 +71,6 @@ class PlaceTypeViewSet(viewsets.ViewSet):
             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
 
 
-class FriendlyTagViewSet(viewsets.ViewSet):
-    @staticmethod
-    def list(request):
-        user_role = request.user.user_role
-
-        if user_role == 'customer':
-            response = 'You are not allowed to get friendly tags.'
-            return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            types = FriendlyTags.objects.order_by('-created_at')
-            serializer = FriendlyTagSerializer(types, many=True)
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
-
-    @staticmethod
-    def create(request):
-        serializer = CreateFriendlyTagSerializer(data=request.data)
-
-        if not serializer.is_valid():
-            return Response({
-                'message': 'Some fields are missing',
-                'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        data = serializer.validated_data
-
-        try:
-            friendly_tag = FriendlyTags.objects.create(tag_name=data['tag_name'])
-        except IntegrityError:
-            return Response({
-                'message': 'Friendly Tag already exists.'
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(data=FriendlyTagSerializer(friendly_tag).data, status=status.HTTP_201_CREATED)
-
-    @staticmethod
-    def update(request, pk=None):
-        user_role = request.user.user_role
-
-        if user_role == 'superuser' or user_role == 'admin':
-            friendly_tag = FriendlyTags.objects.get(pk=pk)
-            try:
-                friendly_tag.tag_name = request.data['tag_name']
-                friendly_tag.save()
-            except IntegrityError:
-                return Response({
-                    'message': 'Friendly Tag already exists.'
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            return Response(data=FriendlyTagSerializer(friendly_tag).data, status=status.HTTP_200_OK)
-        else:
-            response = 'You are not allowed to update this friendly tag.'
-            return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
-
-    @staticmethod
-    def destroy(request, pk=None):
-        user_role = request.user.user_role
-        if user_role == 'superuser' or user_role == 'admin':
-            friendly_tag = FriendlyTags.objects.get(pk=pk)
-            friendly_tag.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            response = 'You are not allowed to delete this friendly tag.'
-            return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
-
-
 class PriceCategoriesViewSet(viewsets.ViewSet):
     @staticmethod
     def list(request):
@@ -197,3 +134,50 @@ class PriceCategoriesViewSet(viewsets.ViewSet):
             response = 'You are not allowed to delete this price category.'
             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
 
+
+class PlacesViewSet(viewsets.ViewSet):
+    @staticmethod
+    def list(request):
+        places = Places.objects.order_by('-created_at')
+        serializer = PlaceSerializer(places, many=True)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+    @staticmethod
+    def create(request):
+        user_id = request.user.id
+        serializer = CreatePlaceSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response({
+                'message': 'Some fields are missing',
+                'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        data = serializer.validated_data
+        place = Places.objects.create(
+            name=data['name'], description=data['description'], address=data['address'],
+            longitude=data['longitude'], latitude=data['latitude'], place_type_id=data['place_type'],
+            price_category_id=data['price_category'], created_by_user_id=user_id
+        )
+
+        return Response(data=PlaceSerializer(place).data, status=status.HTTP_201_CREATED)
+
+    @staticmethod
+    def update(request, pk=None):
+        place = Places.objects.get(pk=pk)
+
+        place.name = request.data['name']
+        place.description = request.data['description']
+        place.address = request.data['address']
+        place.longitude = request.data['longitude']
+        place.latitude = request.data['latitude']
+        place.place_type_id = request.data['place_type']
+        place.price_category_id = request.data['price_category']
+        place.save()
+
+        return Response(data=PlaceSerializer(place).data, status=status.HTTP_200_OK)
+
+    @staticmethod
+    def destroy(request, pk=None):
+        place = Places.objects.get(pk=pk)
+        place.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
