@@ -5,6 +5,7 @@ from places import views
 router = DefaultRouter()
 router.register('types', views.PlaceTypeViewSet, basename='place_type')
 router.register('price_category', views.PriceCategoriesViewSet, basename='price_category')
+router.register('', views.PlacesViewSet, basename='place')
 
 urlpatterns = [
     # path('place/', views.PlaceView.as_view(), name='place'),
