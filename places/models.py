@@ -28,15 +28,15 @@ class PriceCategories(models.Model):
 
 
 class Place(models.Model):
-    place_type = models.OneToOneField(
+    place_type = models.ForeignKey(
         PlaceTypes, related_name='price_type', on_delete=models.CASCADE, blank=True, null=True)
-    friendly_tag = models.OneToOneField(
+    friendly_tag = models.ForeignKey(
         FriendlyTags, related_name='friendly_tag', on_delete=models.CASCADE, blank=True, null=True)
-    price_category = models.OneToOneField(
+    price_category = models.ForeignKey(
         PriceCategories, related_name='price_category', on_delete=models.CASCADE, blank=True, null=True)
 
     external_id = models.UUIDField(primary_key=True, unique=True, editable=False)
-    name = models.CharField(blank=True, max_length=30)
+    name = models.CharField(max_length=30, blank=True)
     description = models.TextField(null=True)
     address = models.JSONField(blank=True)
     images = ArrayField(null=True, base_field=models.ImageField())
