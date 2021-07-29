@@ -1,29 +1,51 @@
 from django.db import models
-from .choices import PLACE_TYPES, FRIENDLY_TAGS, PRICE_CATEGORIES
 from datetime import datetime, timedelta
 from django.contrib.postgres.fields import ArrayField
-#from auths.models import User
+
+
+class PlaceTypes(models.Model):
+    place_type = models.CharField(max_length=30, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+
+    class Meta:
+        db_table = 'place_types'
+
+
+class FriendlyTags(models.Model):
+    tag_name = models.CharField(max_length=30, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+
+    class Meta:
+        db_table = 'friendly_tags'
+
+
+class PriceCategories(models.Model):
+    category_name = models.CharField(max_length=50, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+
+    class Meta:
+        db_table = 'price_categories'
 
 
 class Place(models.Model):
-    PlaceType = models.TextChoices('PlaceType', PLACE_TYPES)
-    FriendlyTag = models.TextChoices('FriendlyTag', FRIENDLY_TAGS)
+    place_type = models.OneToOneField(
+        PlaceTypes, related_name='price_type', on_delete=models.CASCADE, blank=True, null=True)
+    friendly_tag = models.OneToOneField(
+        FriendlyTags, related_name='friendly_tag', on_delete=models.CASCADE, blank=True, null=True)
+    price_category = models.OneToOneField(
+        PriceCategories, related_name='price_category', on_delete=models.CASCADE, blank=True, null=True)
 
-    external_id = models.UUIDField(db_column="ei", primary_key=True, unique=True, editable=False)
-    name = models.CharField(db_column="n", blank=False, max_length=30)
-    type = models.CharField(db_column="t", choices=PlaceType.choices, blank=False, max_length=20)
-    description = models.TextField(db_column="d", max_length=1000, null=True)
-    address = models.JSONField(db_column="a", blank=False)
-    images = ArrayField(db_column='ii', null=True, base_field=models.ImageField())
-    #geo = models.PointField(db_field="geo", auto_index=False)
-    price_category = models.IntegerField(db_column="p", choices=PRICE_CATEGORIES, blank=False)
-    created = models.DateTimeField(db_column="c", default=datetime.utcnow, blank=False)
-    live = models.BooleanField(db_column="l", default=True, blank=False)
-    friendly_tags = ArrayField(db_column="ft", choices=FriendlyTag.choices, default=None,
-                               base_field=models.CharField(max_length=20))
-    created_by_user = models.ForeignKey('auths.User', blank=False, null=False, on_delete=models.CASCADE)
+    external_id = models.UUIDField(primary_key=True, unique=True, editable=False)
+    name = models.CharField(blank=True, max_length=30)
+    description = models.TextField(null=True)
+    address = models.JSONField(blank=True)
+    images = ArrayField(null=True, base_field=models.ImageField())
+    created_at = models.DateTimeField(auto_now_add=True, blank=True)
+    live = models.BooleanField(default=True, blank=False)
+    created_by_user = models.ForeignKey('auths.User', blank=False, null=True, on_delete=models.CASCADE)
 
     class Meta:
         indexes = [
             models.Index(fields=['live'])
         ]
+        db_table = 'places'

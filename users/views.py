@@ -1,10 +1,9 @@
 from django.db import IntegrityError
-from django.core import serializers
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from auths.models import User
-from auths.serializers import UserSerializer, CreateUserSerializer
+from auths.serializers import UserSerializer
 
 
 class UserViewSet(viewsets.ViewSet):

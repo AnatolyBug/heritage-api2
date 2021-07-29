@@ -1,17 +1,35 @@
-from .models import Place
+from .models import PlaceTypes, FriendlyTags, PriceCategories
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from django.contrib.auth import authenticate
-from django.utils.six import text_type
 
-class PlaceSerializer(serializers.ModelSerializer):
+
+class PlaceTypeSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Place
+        model = PlaceTypes
+        fields = '__all__'
 
 
+class CreatePlaceTypeSerializer(serializers.Serializer):
+    place_type = serializers.CharField()
 
-class CreatePlaceSerializer(serializers.Serializer):
-    #amount = serializers.IntegerField(required=True, min_value=0, null=True)
-    #name = serializers.CharField(required=True, max_length=128)
-    pass
+
+class FriendlyTagSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = FriendlyTags
+        fields = '__all__'
+
+
+class CreateFriendlyTagSerializer(serializers.Serializer):
+    tag_name = serializers.CharField()
+
+
+class PriceCategorySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PriceCategories
+        fields = '__all__'
+
+
+class CreatePriceCategorySerializer(serializers.Serializer):
+    category_name = serializers.CharField()
