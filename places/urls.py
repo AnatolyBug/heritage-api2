@@ -3,10 +3,13 @@ from rest_framework.routers import DefaultRouter
 from places import views
 
 router = DefaultRouter()
+router.register('types', views.PlaceTypeViewSet, basename='place_type')
+router.register('friendly_tags', views.FriendlyTagViewSet, basename='friendly_tag')
+router.register('price_category', views.PriceCategoriesViewSet, basename='price_category')
 
 urlpatterns = [
-    path('place/', views.PlaceView.as_view(), name='place'),
-    path('place/<place_id>', views.PlaceView.as_view(), name='place')
+    # path('place/', views.PlaceView.as_view(), name='place'),
+    # path('place/<place_id>', views.PlaceView.as_view(), name='place')
 ]
 
 urlpatterns += router.urls
