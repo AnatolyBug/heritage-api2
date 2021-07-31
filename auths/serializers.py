@@ -1,9 +1,11 @@
-from .models import User
+import os
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import authenticate
-# from .constants import ACCOUNT_NOT_FOUND
 from django.utils.six import text_type
+# from .constants import ACCOUNT_NOT_FOUND
+from .models import User
+from utils.aws import generate_aws_url
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -26,10 +28,16 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    avatar_url = serializers.SerializerMethodField()
+
+    def get_avatar_url(self, obj):
+        bucket_name = os.getenv('AWS_AVATAR_IMAGE_BUCKET_NAME')
+        content_type = 'image/png'
+        return generate_aws_url(key=obj.avatar_url, bucket=bucket_name, content_type=content_type)
 
     class Meta:
         model = User
-        fields = 'id', 'email', 'username', 'user_role', 'first_name', 'last_name', 'bio',
+        fields = ('id', 'email', 'username', 'user_role', 'first_name', 'last_name', 'bio', 'avatar_url')
 
 
 class CreateUserSerializer(serializers.Serializer):

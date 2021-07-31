@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import PlaceTypes, PriceCategories, Places
-from .utils import generate_aws_url
+from utils.aws import generate_aws_url
 
 
 class PlaceTypeSerializer(serializers.ModelSerializer):
