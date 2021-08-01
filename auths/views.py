@@ -10,7 +10,6 @@ from rest_framework import permissions, generics, status
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.core.files.base import ContentFile
 from .models import User
 from utils.auth import TokenGenerator
 from utils.aws import upload_file_to_aws
@@ -91,20 +90,22 @@ class UserSingUpView(APIView):
             urlsafe_base64_encode(force_bytes(user.pk)),
             TokenGenerator().make_token(user)
         )
-        try:
-            name = user.first_name + ' ' + user.last_name
-            message_body = ({
-                'name': name,
-                'email_verification_url': email_verification_url
-            })
-            message = get_template('email_verification.html').render(message_body)
-            email = EmailMessage(
-                'Email verification', message, to=[user.email]
-            )
-            email.content_subtype = 'html'
-            email.send()
-        except Exception:
-            pass
+
+        if os.getenv('TEST') is not True:
+            try:
+                name = user.first_name + ' ' + user.last_name
+                message_body = ({
+                    'name': name,
+                    'email_verification_url': email_verification_url
+                })
+                message = get_template('email_verification.html').render(message_body)
+                email = EmailMessage(
+                    'Email verification', message, to=[user.email]
+                )
+                email.content_subtype = 'html'
+                email.send()
+            except Exception:
+                pass
 
         return Response(data=UserSerializer(user).data, status=status.HTTP_201_CREATED)
 
