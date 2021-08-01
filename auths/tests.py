@@ -1,8 +1,4 @@
 from django.test import TestCase
-
-# Create your tests here.
-
-from django.test import TestCase
 from django.urls import reverse
 
 from auths.models import User
@@ -28,8 +24,9 @@ class AuthorListViewTest(TestCase):
                 username='Username' + str(user_id),
                 first_name=f'First Name {str(user_id)}',
                 last_name=f'Surname {str(user_id)}',
+                password='TestPassword123'
             )
 
-    def test_view_url_exists_at_desired_location(self):
-        response = self.client.get('/user/authors/')
+    def test_create_user(self):
+        response = self.client.post('/user/', data=self.user_dict())
         self.assertEqual(response.status_code, 200)
