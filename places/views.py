@@ -1,8 +1,12 @@
+import os
+import time
+import base64
 from django.db import IntegrityError
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.response import Response
 from .models import PlaceTypes, PriceCategories, Places
+from utils.aws import upload_file_to_aws
 from .serializers import PlaceTypeSerializer, CreatePlaceTypeSerializer, \
     CreatePriceCategorySerializer, PriceCategorySerializer, PlaceSerializer, CreatePlaceSerializer
 
@@ -153,10 +157,37 @@ class PlacesViewSet(viewsets.ViewSet):
                 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
         data = serializer.validated_data
+        audio_file = request.data['audio_file']
+        audio_file_name = f"{user_id}_{time.time()}_audio.wav"
+
+        if audio_file is not None:
+            bucket_name = os.getenv('AWS_PLACE_AUDIO_BUCKET_NAME')
+            upload = upload_file_to_aws(file_name=audio_file_name, bucket=bucket_name)
+
+            if upload is True:
+                os.remove(audio_file_name)
+
+        image_file = request.data['image_file']
+        img_file_name = ''
+
+        if image_file is not None:
+            file_format, img_str = image_file.split(';base64,')
+            ext = file_format.split('/')[-1]
+            img_file_name = f"{user_id}_{time.time()}_place_image.{ext}"
+
+            with open(img_file_name, 'wb') as destination:
+                destination.write(base64.b64decode(img_str))
+
+            bucket_name = os.getenv('AWS_AVATAR_IMAGE_BUCKET_NAME')
+
+            upload = upload_file_to_aws(file_name=img_file_name, bucket=bucket_name)
+            if upload is True:
+                os.remove(img_file_name)
+
         place = Places.objects.create(
-            name=data['name'], description=data['description'], address=data['address'],
-            longitude=data['longitude'], latitude=data['latitude'], place_type_id=data['place_type'],
-            price_category_id=data['price_category'], created_by_user_id=user_id
+            name=data['name'], description=data['description'], address=data['address'], longitude=data['longitude'],
+            latitude=data['latitude'], place_type_id=data['place_type'], images=img_file_name,
+            price_category_id=data['price_category'], created_by_user_id=user_id, audio_url=audio_file_name
         )
 
         return Response(data=PlaceSerializer(place).data, status=status.HTTP_201_CREATED)

@@ -5,8 +5,6 @@ from django.core.validators import RegexValidator
 
 
 class User(AbstractUser):
-
-
     email = models.EmailField(
         verbose_name='email address',
         max_length=255,
