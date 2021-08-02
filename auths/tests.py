@@ -35,4 +35,4 @@ class UserViewsTest(TestCase):
     @override_settings()
     def test_create_user(self):
         response = self.client.post('/api/auth/register/', data=self.user_dict())
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)

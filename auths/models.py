@@ -20,7 +20,7 @@ class User(AbstractUser):
 
     # No Guide models yet
     # saved_guides = models.ManyToManyField(Place, related_name='guide')
-    avatar_url = models.URLField(blank=True)
+    avatar_url = models.URLField(default='default_avatar.png', blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     created_date = models.DateTimeField(auto_now_add=True)
