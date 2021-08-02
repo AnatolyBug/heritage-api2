@@ -16,7 +16,7 @@ class User(AbstractUser):
     user_role = models.CharField(max_length=10, default='customer')
     email_confirmed = models.BooleanField(default=False)
     email_verification_id = models.CharField(max_length=30, blank=True)
-    saved_places = models.ManyToManyField('places.Places', related_name='place')
+    # saved_places = models.ManyToManyField('places.Places', related_name='place')
 
     # No Guide models yet
     # saved_guides = models.ManyToManyField(Place, related_name='guide')

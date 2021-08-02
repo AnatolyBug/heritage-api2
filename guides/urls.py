@@ -4,6 +4,8 @@ from guides import views
 
 router = DefaultRouter()
 router.register('friendly_tags', views.FriendlyTagViewSet, basename='friendly_tag')
+router.register('transport_methods', views.TransportMethodViewSet, basename='transport_method')
+router.register('', views.GuideViewSet, basename='guide')
 
 urlpatterns = [
     # path('place/', views.PlaceView.as_view(), name='place'),
