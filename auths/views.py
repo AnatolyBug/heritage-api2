@@ -1,3 +1,6 @@
+import os
+import time
+import base64
 from django.core.mail import EmailMessage
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.db import IntegrityError
@@ -8,7 +11,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import User
-from .utils import TokenGenerator
+from utils.auth import TokenGenerator
+from utils.aws import upload_file_to_aws
 from .serializers import MyTokenObtainPairSerializer, UserSerializer, CreateUserSerializer
 
 
@@ -27,6 +31,24 @@ class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView, generics
         user.first_name = request.data['first_name']
         user.last_name = request.data['last_name']
         user.email = request.data['email']
+
+        avatar_file = request.data['file']
+        if avatar_file is not None:
+            file_format, img_str = avatar_file.split(';base64,')
+            ext = file_format.split('/')[-1]
+            avatar_file_name = f"{user.id}_{time.time()}_photo.{ext}"
+            # file_path = os.path.join("../media", avatar_file_name)
+
+            with open(avatar_file_name, 'wb') as destination:
+                destination.write(base64.b64decode(img_str))
+
+            bucket_name = os.getenv('AWS_AVATAR_IMAGE_BUCKET_NAME')
+
+            upload = upload_file_to_aws(file_name=avatar_file_name, bucket=bucket_name)
+            if upload is True:
+                os.remove(avatar_file_name)
+            user.avatar_url = avatar_file_name
+
         user.save()
 
         return Response(data=self.get_serializer(user).data)
@@ -68,20 +90,22 @@ class UserSingUpView(APIView):
             urlsafe_base64_encode(force_bytes(user.pk)),
             TokenGenerator().make_token(user)
         )
-        try:
-            name = user.first_name + ' ' + user.last_name
-            message_body = ({
-                'name': name,
-                'email_verification_url': email_verification_url
-            })
-            message = get_template('email_verification.html').render(message_body)
-            email = EmailMessage(
-                'Email verification', message, to=[user.email]
-            )
-            email.content_subtype = 'html'
-            email.send()
-        except Exception:
-            pass
+
+        if os.getenv('TEST') is not True:
+            try:
+                name = user.first_name + ' ' + user.last_name
+                message_body = ({
+                    'name': name,
+                    'email_verification_url': email_verification_url
+                })
+                message = get_template('email_verification.html').render(message_body)
+                email = EmailMessage(
+                    'Email verification', message, to=[user.email]
+                )
+                email.content_subtype = 'html'
+                email.send()
+            except Exception:
+                pass
 
         return Response(data=UserSerializer(user).data, status=status.HTTP_201_CREATED)
 

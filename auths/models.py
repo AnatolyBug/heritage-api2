@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from .managers import UserManager
+from django.core.validators import RegexValidator
 
 
 class User(AbstractUser):
@@ -15,11 +16,11 @@ class User(AbstractUser):
     user_role = models.CharField(max_length=10, default='customer')
     email_confirmed = models.BooleanField(default=False)
     email_verification_id = models.CharField(max_length=30, blank=True)
-    saved_places = models.ManyToManyField('places.Places', related_name='place')
+    # saved_places = models.ManyToManyField('places.Places', related_name='place')
 
     # No Guide models yet
     # saved_guides = models.ManyToManyField(Place, related_name='guide')
-    profile_image = models.ImageField(upload_to='avatar', blank=True)
+    avatar_url = models.URLField(default='default_avatar.png', blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     created_date = models.DateTimeField(auto_now_add=True)

@@ -24,7 +24,8 @@ class Places(models.Model):
         PlaceTypes, related_name='price_type', on_delete=models.CASCADE, blank=True, null=True)
     price_category = models.ForeignKey(
         PriceCategories, related_name='price_category', on_delete=models.CASCADE, blank=True, null=True)
-    created_by_user = models.ForeignKey('auths.User', related_name='user', blank=False, null=True, on_delete=models.CASCADE)
+    created_by_user = models.ForeignKey(
+        'auths.User', related_name='user', blank=False, null=True, on_delete=models.CASCADE)
 
     name = models.CharField(max_length=30, blank=True)
     description = models.TextField(null=True)
