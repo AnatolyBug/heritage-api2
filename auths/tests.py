@@ -28,5 +28,5 @@ class AuthorListViewTest(TestCase):
             )
 
     def test_create_user(self):
-        response = self.client.post('/user/', data=self.user_dict())
+        response = self.client.post('/auths/register/', data=self.user_dict())
         self.assertEqual(response.status_code, 200)
