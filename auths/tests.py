@@ -1,10 +1,12 @@
-from django.test import TestCase
 from django.urls import reverse
+from django.test import TestCase, override_settings
+import json
 
 from auths.models import User
 
 
-class AuthorListViewTest(TestCase):
+@override_settings(TEST=True)
+class UserViewsTest(TestCase):
 
     def bad_user_dict(self):
         return dict(
@@ -14,8 +16,7 @@ class AuthorListViewTest(TestCase):
     def user_dict(self):
         return dict(
             email='test@user.com', username='testuser', first_name='Test',
-            last_name='User', password='Testuser123', bio='abc'
-        )
+            last_name='User', password='Testuser123', bio='abc')
 
     @classmethod
     def setUpTestData(cls):
@@ -31,6 +32,7 @@ class AuthorListViewTest(TestCase):
                 password='TestPassword123'
             )
 
+    @override_settings()
     def test_create_user(self):
-        response = self.client.post('/user/', data=self.user_dict())
+        response = self.client.post('/api/auth/register/', data=self.user_dict())
         self.assertEqual(response.status_code, 200)
