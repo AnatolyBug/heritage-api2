@@ -24,7 +24,7 @@ class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView, generics
     serializer_class = UserSerializer
 
     def get_object(self):
-        return Response(self.request.user, status=status.HTTP_200_OK)
+        return self.request.user
 
     def put(self, request, *args, **kwargs):
         user = request.user
@@ -173,10 +173,10 @@ class ResetPasswordView(APIView):
     @staticmethod
     def post(request, *args, **kwargs):
         try:
-            uid = force_text(urlsafe_base64_decode(request.query_params['uid']))
+            uid = force_text(urlsafe_base64_decode(request.data['uid']))
             user = User.objects.get(pk=uid)
 
-            if user is None or not TokenGenerator().check_token(user, request.query_params['token']):
+            if user is None or not TokenGenerator().check_token(user, request.data['token']):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
             user.set_password(request.data['password'])
