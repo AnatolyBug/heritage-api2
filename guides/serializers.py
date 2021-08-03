@@ -32,7 +32,8 @@ class GuideSerializer(serializers.ModelSerializer):
 
 
 class CreateGuideSerializer(serializers.Serializer):
-    place = serializers.IntegerField()
+    place = serializers.ListField()
     main_transport_method = serializers.IntegerField()
     friendly_tag = serializers.IntegerField()
     duration = serializers.IntegerField()
+    transport_methods = serializers.ListField()
