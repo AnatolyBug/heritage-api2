@@ -52,8 +52,9 @@ class UserViewsTest(TestCase):
         self.assertContains(rv_login, 'access')
 
         #check if token works
-        # rv_login = self.client.get('/api/auth/user/', headers={'Authorization': 'Bearer ' + rv_login.data['refresh']})
-        # self.assertEqual(rv_login.status_code, 200)
+        auth_headers = {'HTTP_AUTHORIZATION': 'Bearer ' + rv_login.data['access']}
+        rv_login_2 = self.client.get('/api/auth/user/', **auth_headers)
+        self.assertEqual(rv_login_2.status_code, 200)
 
 
     def test_change_password(self):
