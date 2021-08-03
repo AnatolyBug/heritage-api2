@@ -151,14 +151,13 @@ class GuideViewSet(viewsets.ViewSet):
                 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
         data = serializer.validated_data
-        try:
-            guide = Guides.objects.create(
-                place_id=data['place'], main_transport_method_id=data['main_transport_method'], user_id=user_id,
-                friendly_tag_id=data['friendly_tag'], duration=data['duration'])
-        except IntegrityError:
-            return Response({
-                'message': 'Guide already exists.'
-            }, status=status.HTTP_400_BAD_REQUEST)
+        guide = Guides.objects.create(
+            main_transport_method_id=data['main_transport_method'], user_id=user_id,
+            friendly_tag_id=data['friendly_tag'], duration=data['duration'],
+            transport_methods=data['transport_methods'])
+
+        for place_id in data['place']:
+            guide.place.add(place_id)
 
         return Response(data=GuideSerializer(guide).data, status=status.HTTP_201_CREATED)
 

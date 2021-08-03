@@ -51,7 +51,7 @@ class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView, generics
 
         user.save()
 
-        return Response(data=self.get_serializer(user).data)
+        return Response(data=self.get_serializer(user).data, )
 
     def patch(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -107,7 +107,10 @@ class UserSingUpView(APIView):
             except Exception:
                 pass
 
-        return Response(data=UserSerializer(user).data, status=status.HTTP_201_CREATED)
+        response = UserSerializer(user).data
+        response['email_verification_url'] = email_verification_url
+
+        return Response(data=response, status=status.HTTP_201_CREATED)
 
 
 class EmailVerificationView(APIView):
@@ -143,21 +146,23 @@ class ForgotPasswordView(APIView):
                 TokenGenerator().make_token(user)
             )
 
-            try:
-                name = user.first_name + ' ' + user.last_name
-                message_body = ({
-                    'name': name,
-                    'password_reset_url': password_reset_url
-                })
-                message = get_template('reset_password.html').render(message_body)
-                email = EmailMessage(
-                    'Email verification', message, to=[user.email]
-                )
-                email.content_subtype = 'html'
-                email.send()
-            except Exception:
-                pass
-            return Response(status=status.HTTP_200_OK)
+            if os.getenv('TEST') is not True:
+                try:
+                    name = user.first_name + ' ' + user.last_name
+                    message_body = ({
+                        'name': name,
+                        'password_reset_url': password_reset_url
+                    })
+                    message = get_template('reset_password.html').render(message_body)
+                    email = EmailMessage(
+                        'Email verification', message, to=[user.email]
+                    )
+                    email.content_subtype = 'html'
+                    email.send()
+                except Exception:
+                    pass
+            return Response(data={'password_reset_url': password_reset_url},
+                            status=status.HTTP_200_OK)
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
 

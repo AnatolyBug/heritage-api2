@@ -21,7 +21,7 @@ class TransportMethods(models.Model):
 
 
 class Guides(models.Model):
-    place = models.ForeignKey(Places, related_name='place', on_delete=models.CASCADE, blank=True, null=True)
+    place = models.ManyToManyField(Places, related_name='place', blank=True, null=True)
     main_transport_method = models.ForeignKey(
         TransportMethods, related_name='main_transport_method', on_delete=models.CASCADE, blank=True, null=True)
     friendly_tag = models.ForeignKey(
