@@ -33,7 +33,7 @@ class PlaceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Places
-        fields = ('name', 'description', 'address', 'longitude', 'latitude', 'audio_url')
+        fields = ('name', 'description', 'address', 'longitude', 'latitude')
 
 
 class CreatePlaceSerializer(serializers.Serializer):

@@ -158,9 +158,10 @@ class PlacesViewSet(viewsets.ViewSet):
 
         data = serializer.validated_data
         audio_file = request.data['audio_file']
-        audio_file_name = f"{user_id}_{time.time()}_audio.wav"
+        audio_file_name = ''
 
-        if audio_file is not None:
+        if audio_file:
+            audio_file_name = f"{user_id}_{time.time()}_audio.wav"
             bucket_name = os.getenv('AWS_PLACE_AUDIO_BUCKET_NAME')
             upload = upload_file_to_aws(file_name=audio_file_name, bucket=bucket_name)
 
@@ -168,9 +169,9 @@ class PlacesViewSet(viewsets.ViewSet):
                 os.remove(audio_file_name)
 
         image_file = request.data['image_file']
-        img_file_name = ''
+        images = []
 
-        if image_file is not None:
+        if image_file:
             file_format, img_str = image_file.split(';base64,')
             ext = file_format.split('/')[-1]
             img_file_name = f"{user_id}_{time.time()}_place_image.{ext}"
@@ -183,10 +184,11 @@ class PlacesViewSet(viewsets.ViewSet):
             upload = upload_file_to_aws(file_name=img_file_name, bucket=bucket_name)
             if upload is True:
                 os.remove(img_file_name)
+                images.append(img_file_name)
 
         place = Places.objects.create(
             name=data['name'], description=data['description'], address=data['address'], longitude=data['longitude'],
-            latitude=data['latitude'], place_type_id=data['place_type'], images=img_file_name,
+            latitude=data['latitude'], place_type_id=data['place_type'], images=images,
             price_category_id=data['price_category'], created_by_user_id=user_id, audio_url=audio_file_name
         )
 
