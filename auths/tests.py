@@ -16,19 +16,6 @@ class UserViewsTest(TestCase):
             email='test@user.com', username='Testuser', first_name='Test',
             last_name='User', password='Testuser123', bio='abc')
 
-    @classmethod
-    def setUpTestData(cls):
-        # Create 15 Users for pagination tests
-        number_of_users = 15
-
-        for user_id in range(number_of_users):
-            User.objects.create(
-                email=f'test@example.com {str(user_id)}',
-                username=f'Username {str(user_id)}',
-                first_name=f'First Name {str(user_id)}',
-                last_name=f'Surname {str(user_id)}',
-                password='TestPassword123'
-            )
 
     def test_create_user(self):
         response_create = self.client.post('/api/auth/register/', data=self.user_dict())
@@ -80,6 +67,20 @@ class UserViewsTest(TestCase):
         rv_login = self.client.post('/api/auth/login/', data=dict(email=self.user_dict()['email'],
                                                                   password='NewPassword101'))
         self.assertEqual(rv_login.status_code, 200)
+
+    def test_put(self):
+        rv = self.client.post('/api/auth/register/', data=self.user_dict())
+        rv_login = self.client.post('/api/auth/login/', data=dict(email=self.user_dict()['email'],
+                                                                  password=self.user_dict()['password']))
+
+        user_updated = self.user_dict()
+        user_updated['first_name'] = 'NewName'
+        user_updated['password'] = 'NewPassword123'
+
+        auth_headers = {'HTTP_AUTHORIZATION': 'Bearer ' + rv_login.data['access']}
+        rv_login_2 = self.client.put('/api/auth/user/', data=user_updated,  **auth_headers)
+        self.assertEqual(rv_login.status_code, 200)
+
 
 
 

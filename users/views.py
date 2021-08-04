@@ -19,7 +19,7 @@ class UserViewSet(viewsets.ViewSet):
             get_users = User.objects.exclude(id=user_id)
             user_list = get_users.filter(user_role='customer').order_by('-created_date')
 
-        page = request.query_params['page']
+        page = int(request.query_params.get('page', 1))
         paginator = Paginator(user_list, 20)
 
         try:
@@ -29,8 +29,20 @@ class UserViewSet(viewsets.ViewSet):
         except EmptyPage:
             users = paginator.page(paginator.num_pages)
 
-        previous_page = users.has_previous()
-        next_page = users.has_next()
+        if users.has_previous():
+            previous_page = '%s/api/users/?page=%s' % (
+            request.build_absolute_uri('/')[:-1],
+            str(page-1))
+        else:
+            previous_page = None
+
+        if users.has_next():
+            next_page = '%s/api/users/?page=%s' % (
+            request.build_absolute_uri('/')[:-1],
+            str(page+1))
+        else:
+            next_page = None
+
         total = paginator.num_pages
         data = UserSerializer(users, many=True).data
 

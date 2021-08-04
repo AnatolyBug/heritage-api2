@@ -18,7 +18,7 @@ class UsersViewsTest(APITestCase):
     @classmethod
     def setUpTestData(cls):
         # Create 15 Users for pagination tests
-        number_of_users = 15
+        number_of_users = 25
 
         for user_id in range(number_of_users):
             User.objects.create(email=f'test@example.com {str(user_id)}',
@@ -28,5 +28,10 @@ class UsersViewsTest(APITestCase):
                 password='TestPassword123')
 
     def test_login(self):
-        rv_login = self.client.get('/api/users/?page=1')
-        self.assertEqual(rv_login.status_code, 200)
+        rv = self.client.get('/api/users/')
+        self.assertEqual(rv.status_code, 200)
+        self.assertContains(rv, 'next_page')
+
+        next_page = rv.data['next_page']
+        rv = self.client.get(next_page)
+        self.assertEqual(rv.status_code, 200)
