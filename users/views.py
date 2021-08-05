@@ -19,7 +19,7 @@ class UserViewSet(viewsets.ViewSet):
             get_users = User.objects.exclude(id=user_id)
             user_list = get_users.filter(user_role='customer').order_by('-created_date')
 
-        page = int(request.query_params.get('page', 1))
+        page = request.query_params['page']
         paginator = Paginator(user_list, 20)
 
         try:
@@ -29,29 +29,16 @@ class UserViewSet(viewsets.ViewSet):
         except EmptyPage:
             users = paginator.page(paginator.num_pages)
 
-        if users.has_previous():
-            previous_page = '%s/api/users/?page=%s' % (
-            request.build_absolute_uri('/')[:-1],
-            str(page-1))
-        else:
-            previous_page = None
-
-        if users.has_next():
-            next_page = '%s/api/users/?page=%s' % (
-            request.build_absolute_uri('/')[:-1],
-            str(page+1))
-        else:
-            next_page = None
-
+        previous_page = users.has_previous()
+        next_page = users.has_next()
         total = paginator.num_pages
         data = UserSerializer(users, many=True).data
 
-        return Response({
-            'data': data,
-            'previous_page': previous_page,
-            'next_page': next_page,
-            'total': total
-        }, status=status.HTTP_200_OK)
+        return Response({'data': data,
+                         'previous_page': previous_page,
+                         'next_page': next_page,
+                         'total': total
+                         }, status=status.HTTP_200_OK)
 
     @staticmethod
     def retrieve(request, pk=None):

@@ -8,7 +8,7 @@ router.register('transport_methods', views.TransportMethodViewSet, basename='tra
 router.register('', views.GuideViewSet, basename='guide')
 
 urlpatterns = [
-    # path('place/', views.PlaceView.as_view(), name='place'),
+    path('feed/', views.FeedView.as_view(), name='feed'),
     # path('place/<place_id>', views.PlaceView.as_view(), name='place')
 ]
 
