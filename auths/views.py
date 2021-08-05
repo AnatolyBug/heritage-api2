@@ -36,21 +36,22 @@ class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView, generics
             user.email = request.data['email']
             user.bio = request.data['bio']
 
-            avatar_file = request.data.get('file')
+            avatar_file = request.data['file']
+
             if avatar_file is not None:
                 file_format, img_str = avatar_file.split(';base64,')
                 ext = file_format.split('/')[-1]
                 avatar_file_name = f"{user.id}_{time.time()}_photo.{ext}"
-                # file_path = os.path.join("../media", avatar_file_name)
 
                 with open(avatar_file_name, 'wb') as destination:
                     destination.write(base64.b64decode(img_str))
 
                 bucket_name = os.getenv('AWS_AVATAR_IMAGE_BUCKET_NAME')
-
                 upload = upload_file_to_aws(file_name=avatar_file_name, bucket=bucket_name)
+
                 if upload is True:
                     os.remove(avatar_file_name)
+
                 user.avatar_url = avatar_file_name
 
             user.save()
