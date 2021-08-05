@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from .models import User
 from utils.auth import TokenGenerator
 from utils.aws import upload_file_to_aws
-from .serializers import MyTokenObtainPairSerializer, UserSerializer, CreateUserSerializer
+from .serializers import MyTokenObtainPairSerializer, UserSerializer, CreateUserSerializer, ChangePasswordSerializer
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -192,3 +192,24 @@ class ResetPasswordView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ChangePasswordView(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    @staticmethod
+    def post(request):
+        user_id = request.user.id
+        user = User.objects.get(id=user_id)
+        serializer = ChangePasswordSerializer(data=request.data)
+
+        if serializer.is_valid():
+            if not user.check_password(request.data['old_password']):
+                return Response({'message': 'Old password is wrong.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            user.set_password(request.data['new_password'])
+            user.save()
+
+            return Response({'message': 'Password updated successfully'}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
