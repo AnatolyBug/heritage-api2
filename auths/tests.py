@@ -1,7 +1,4 @@
-from django.urls import reverse
-from django.contrib import auth
 from django.test import TestCase, override_settings
-import json
 
 from auths.models import User
 
@@ -19,19 +16,6 @@ class UserViewsTest(TestCase):
             email='test@user.com', username='Testuser', first_name='Test',
             last_name='User', password='Testuser123', bio='abc')
 
-    @classmethod
-    def setUpTestData(cls):
-        # Create 15 Users for pagination tests
-        number_of_users = 15
-
-        for user_id in range(number_of_users):
-            User.objects.create(
-                email=f'test@example.com {str(user_id)}',
-                username=f'Username {str(user_id)}',
-                first_name=f'First Name {str(user_id)}',
-                last_name=f'Surname {str(user_id)}',
-                password='TestPassword123'
-            )
 
     def test_create_user(self):
         response_create = self.client.post('/api/auth/register/', data=self.user_dict())
@@ -42,6 +26,18 @@ class UserViewsTest(TestCase):
         response_verify = self.client.get(email_verification_url)
         self.assertEqual(response_verify.status_code, 204)
         assert User.objects.filter(email_confirmed=True).count() == 1
+
+        response_create_bad = self.client.post('/api/auth/register/', data=self.bad_user_dict())
+        self.assertEqual(response_create_bad.status_code, 400)
+        self.assertContains(response_create_bad, 'This field may not be blank', status_code=400)
+
+        bad_password_user = self.bad_user_dict()
+        bad_password_user['username'] = 'Bad_Password_User'
+        bad_password_user['password'] = 'weak_password'
+        response_create_bad = self.client.post('/api/auth/register/', data=bad_password_user)
+        self.assertEqual(response_create_bad.status_code, 400)
+        self.assertContains(response_create_bad, "password must contain at least an Uppercase, lowercase and a number",
+                            status_code=400)
 
     def test_login(self):
         rv = self.client.post('/api/auth/register/', data=self.user_dict())
@@ -71,6 +67,20 @@ class UserViewsTest(TestCase):
         rv_login = self.client.post('/api/auth/login/', data=dict(email=self.user_dict()['email'],
                                                                   password='NewPassword101'))
         self.assertEqual(rv_login.status_code, 200)
+
+    def test_put(self):
+        rv = self.client.post('/api/auth/register/', data=self.user_dict())
+        rv_login = self.client.post('/api/auth/login/', data=dict(email=self.user_dict()['email'],
+                                                                  password=self.user_dict()['password']))
+
+        user_updated = self.user_dict()
+        user_updated['first_name'] = 'NewName'
+        user_updated['password'] = 'NewPassword123'
+
+        auth_headers = {'HTTP_AUTHORIZATION': 'Bearer ' + rv_login.data['access']}
+        rv_login_2 = self.client.put('/api/auth/user/', data=user_updated,  **auth_headers)
+        self.assertEqual(rv_login.status_code, 200)
+
 
 
 
