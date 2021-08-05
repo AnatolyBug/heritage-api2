@@ -27,11 +27,17 @@ class UsersViewsTest(APITestCase):
                 last_name=f'Surname {str(user_id)}',
                 password='TestPassword123')
 
-    def test_login(self):
+    def test_list(self):
         rv = self.client.get('/api/users/')
         self.assertEqual(rv.status_code, 200)
-        self.assertContains(rv, 'next_page')
+        self.assertFalse(rv.data['previous_page'])
+        self.assertTrue(rv.data['next_page'])
 
         next_page = rv.data['next_page']
         rv = self.client.get(next_page)
         self.assertEqual(rv.status_code, 200)
+
+    def test_retrieve(self):
+        #User 100 id shouldn't exist
+        rv = self.client.get('/api/users/100/')
+        self.assertEqual(rv.status_code, 204)

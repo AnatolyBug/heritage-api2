@@ -36,7 +36,7 @@ class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView, generics
             user.email = request.data['email']
             user.bio = request.data['bio']
 
-            avatar_file = request.data['file']
+            avatar_file = request.data.get('file')
             if avatar_file is not None:
                 file_format, img_str = avatar_file.split(';base64,')
                 ext = file_format.split('/')[-1]
