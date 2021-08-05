@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from .models import User
 from utils.auth import TokenGenerator
 from utils.aws import upload_file_to_aws
-from .serializers import MyTokenObtainPairSerializer, UserSerializer, CreateUserSerializer
+from .serializers import MyTokenObtainPairSerializer, UserSerializer, CreateUserSerializer, ChangePasswordSerializer
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -28,30 +28,37 @@ class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView, generics
 
     def put(self, request, *args, **kwargs):
         user = request.user
-        user.first_name = request.data['first_name']
-        user.last_name = request.data['last_name']
-        user.email = request.data['email']
 
-        avatar_file = request.data['file']
-        if avatar_file is not None:
-            file_format, img_str = avatar_file.split(';base64,')
-            ext = file_format.split('/')[-1]
-            avatar_file_name = f"{user.id}_{time.time()}_photo.{ext}"
-            # file_path = os.path.join("../media", avatar_file_name)
+        try:
+            user.username = request.data['username']
+            user.first_name = request.data['first_name']
+            user.last_name = request.data['last_name']
+            user.email = request.data['email']
+            user.bio = request.data['bio']
 
-            with open(avatar_file_name, 'wb') as destination:
-                destination.write(base64.b64decode(img_str))
+            avatar_file = request.data.get('file')
+            if avatar_file is not None:
+                file_format, img_str = avatar_file.split(';base64,')
+                ext = file_format.split('/')[-1]
+                avatar_file_name = f"{user.id}_{time.time()}_photo.{ext}"
+                # file_path = os.path.join("../media", avatar_file_name)
 
-            bucket_name = os.getenv('AWS_AVATAR_IMAGE_BUCKET_NAME')
+                with open(avatar_file_name, 'wb') as destination:
+                    destination.write(base64.b64decode(img_str))
 
-            upload = upload_file_to_aws(file_name=avatar_file_name, bucket=bucket_name)
-            if upload is True:
-                os.remove(avatar_file_name)
-            user.avatar_url = avatar_file_name
+                bucket_name = os.getenv('AWS_AVATAR_IMAGE_BUCKET_NAME')
 
-        user.save()
+                upload = upload_file_to_aws(file_name=avatar_file_name, bucket=bucket_name)
+                if upload is True:
+                    os.remove(avatar_file_name)
+                user.avatar_url = avatar_file_name
 
-        return Response(data=self.get_serializer(user).data, )
+            user.save()
+
+        except IntegrityError:
+            return Response({'error': 'Username already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(data=self.get_serializer(user).data, status=status.HTTP_200_OK)
 
     def patch(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -185,3 +192,24 @@ class ResetPasswordView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ChangePasswordView(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    @staticmethod
+    def post(request):
+        user_id = request.user.id
+        user = User.objects.get(id=user_id)
+        serializer = ChangePasswordSerializer(data=request.data)
+
+        if serializer.is_valid():
+            if not user.check_password(request.data['old_password']):
+                return Response({'message': 'Old password is wrong.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            user.set_password(request.data['new_password'])
+            user.save()
+
+            return Response({'message': 'Password updated successfully'}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

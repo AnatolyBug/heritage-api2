@@ -26,4 +26,5 @@ class UserSearchView(APIView):
             serializer = UserSerializer(users, many=True)
             return Response(data=serializer.data, status=status.HTTP_200_OK)
         else:
-            return Response(data='No Results', status=status.HTTP_404_NOT_FOUND)
+            #https://softwareengineering.stackexchange.com/questions/322951/should-i-return-a-204-or-a-404-response-when-a-resource-is-not-found
+            return Response(data='No Results', status=status.HTTP_204_NO_CONTENT)

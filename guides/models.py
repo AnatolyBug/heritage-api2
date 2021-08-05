@@ -29,6 +29,7 @@ class Guides(models.Model):
     user = models.ForeignKey(User, related_name='guide_user', on_delete=models.CASCADE, blank=True, null=True)
     duration = models.IntegerField(blank=True)
     transport_methods = ArrayField(models.CharField(max_length=50, blank=True), null=True)
+    map_image_url = models.URLField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
     class Meta:

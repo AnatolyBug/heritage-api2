@@ -34,18 +34,20 @@ class UserViewSet(viewsets.ViewSet):
         total = paginator.num_pages
         data = UserSerializer(users, many=True).data
 
-        return Response({
-            'data': data,
-            'previous_page': previous_page,
-            'next_page': next_page,
-            'total': total
-        }, status=status.HTTP_200_OK)
+        return Response({'data': data,
+                         'previous_page': previous_page,
+                         'next_page': next_page,
+                         'total': total
+                         }, status=status.HTTP_200_OK)
 
     @staticmethod
     def retrieve(request, pk=None):
-        user = User.objects.get(pk=pk)
-        serializer = UserSerializer(user)
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
+        user = User.objects.filter(pk=pk).first()
+        if user:
+            serializer = UserSerializer(user)
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(data='Not Found', status=status.HTTP_204_NO_CONTENT)
 
     @staticmethod
     def update(request, pk=None):
