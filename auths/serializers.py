@@ -9,7 +9,6 @@ from utils.aws import generate_aws_url
 from django.core.validators import RegexValidator
 
 
-
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         self.user = authenticate(**{
@@ -44,7 +43,14 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'user_role', 'first_name', 'last_name', 'bio', 'avatar_url')
+        fields = ('id', 'email', 'username', 'user_role', 'first_name', 'last_name', 'bio', 'is_active', 'avatar_url')
+
+
+class CustomerUserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name', 'bio')
 
 
 class CreateUserSerializer(serializers.Serializer):
