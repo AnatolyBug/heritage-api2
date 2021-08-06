@@ -46,6 +46,13 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'email', 'username', 'user_role', 'first_name', 'last_name', 'bio', 'is_active', 'avatar_url')
 
 
+class CustomerUserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name', 'bio')
+
+
 class CreateUserSerializer(serializers.Serializer):
     username_validator = RegexValidator("^[a-zA-Z0-9_.-]{4,25}$",
                                         "username can only contain alphanumeric characters, ., _,-")

@@ -186,11 +186,11 @@ class PlacesViewSet(viewsets.ViewSet):
                 os.remove(img_file_name)
                 images.append(img_file_name)
 
-        place = Places.objects.create(
-            name=data['name'], description=data['description'], address=data['address'], longitude=data['longitude'],
-            latitude=data['latitude'], place_type_id=data['place_type'], images=images,
-            price_category_id=data['price_category'], created_by_user_id=user_id, audio_url=audio_file_name
-        )
+        place = Places.objects.create(name=data['name'], description=data['description'],
+                                      address=data['address'], longitude=data['longitude'],
+                                      latitude=data['latitude'], place_type_id=data['place_type'],
+                                      images=images, price_category_id=data['price_category'],
+                                      created_by_user_id=user_id, audio_url=audio_file_name)
 
         return Response(data=PlaceSerializer(place).data, status=status.HTTP_201_CREATED)
 
