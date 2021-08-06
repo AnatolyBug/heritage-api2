@@ -65,9 +65,12 @@ class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView, generics
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        user = request.user
+        user.is_active = False
+        user.save()
+        # instance = self.get_object()
+        # self.perform_destroy(instance)
+        return Response(data=self.get_serializer(user).data, status=status.HTTP_204_NO_CONTENT)
 
 
 class UserSingUpView(APIView):
@@ -196,7 +199,7 @@ class ResetPasswordView(APIView):
 
 
 class ChangePasswordView(APIView):
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (permissions.IsAuthenticated,)
 
     @staticmethod
     def post(request):
