@@ -11,3 +11,4 @@ class Relationships(models.Model):
 
     class Meta:
         db_table = 'relationships'
+        unique_together = ('from_user', 'to_user',)
