@@ -43,7 +43,7 @@ class UserViewSet(viewsets.ViewSet):
     @staticmethod
     def retrieve(request, pk=None):
         user_role = request.user.user_role
-        user = User.objects.filter(pk=pk).first()
+        user = User.objects.filter(username=pk).first()
         if user:
             if user_role == 'superuser' or user_role == 'admin':
                 serializer = UserSerializer(user)
