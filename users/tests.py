@@ -1,6 +1,5 @@
 from rest_framework.test import APITestCase, override_settings
 
-
 from auths.models import User
 
 
