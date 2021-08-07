@@ -9,6 +9,10 @@ from utils.aws import generate_aws_url
 from django.core.validators import RegexValidator
 
 
+username_validator = RegexValidator("^[a-zA-Z0-9_.-]{4,25}$",
+                                        "username can only contain alphanumeric characters, ., _,-")
+password_validator = RegexValidator("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,32}$",
+                                        "password must contain at least an Uppercase, lowercase and a number")
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
@@ -30,8 +34,8 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True)
+    old_password = serializers.CharField(required=True, validators=[password_validator])
+    new_password = serializers.CharField(required=True, validators=[password_validator])
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -46,16 +50,12 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'email', 'username', 'user_role', 'first_name', 'last_name', 'bio', 'avatar_url')
 
-
-class CreateUserSerializer(serializers.Serializer):
-    username_validator = RegexValidator("^[a-zA-Z0-9_.-]{4,25}$",
-                                        "username can only contain alphanumeric characters, ., _,-")
-    password_validator = RegexValidator("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,32}$",
-                                        "password must contain at least an Uppercase, lowercase and a number")
-
+class PutUserSerializer(serializers.Serializer):
     email = serializers.EmailField()
     username = serializers.CharField(validators=[username_validator])
     first_name = serializers.CharField()
     last_name = serializers.CharField()
-    password = serializers.CharField(validators=[password_validator])
     bio = serializers.CharField()
+
+class CreateUserSerializer(PutUserSerializer):
+    password = serializers.CharField(validators=[password_validator])

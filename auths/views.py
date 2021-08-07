@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from .models import User
 from utils.auth import TokenGenerator
 from utils.aws import upload_file_to_aws
-from .serializers import MyTokenObtainPairSerializer, UserSerializer, CreateUserSerializer, ChangePasswordSerializer
+from .serializers import MyTokenObtainPairSerializer, UserSerializer, CreateUserSerializer, ChangePasswordSerializer, PutUserSerializer
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -27,8 +27,13 @@ class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView, generics
         return self.request.user
 
     def put(self, request, *args, **kwargs):
-        user = request.user
+        serializer = PutUserSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({
+                'message': 'Some fields are missing',
+                'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
+        user = request.user
         try:
             user.username = request.data['username']
             user.first_name = request.data['first_name']
@@ -38,7 +43,7 @@ class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView, generics
 
             avatar_file = request.data['file']
 
-            if avatar_file is not None:
+            if avatar_file:
                 file_format, img_str = avatar_file.split(';base64,')
                 ext = file_format.split('/')[-1]
                 avatar_file_name = f"{user.id}_{time.time()}_photo.{ext}"
@@ -196,7 +201,6 @@ class ResetPasswordView(APIView):
 
 
 class ChangePasswordView(APIView):
-    permission_classes = (permissions.AllowAny,)
 
     @staticmethod
     def post(request):
