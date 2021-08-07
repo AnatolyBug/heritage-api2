@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from .models import User
 from utils.auth import TokenGenerator
 from utils.aws import upload_file_to_aws
-from .serializers import MyTokenObtainPairSerializer, UserSerializer, CreateUserSerializer, ChangePasswordSerializer, PutUserSerializer
+from .serializers import MyTokenObtainPairSerializer, UserSerializer, CreateUserSerializer, ChangePasswordSerializer
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -27,13 +27,8 @@ class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView, generics
         return self.request.user
 
     def put(self, request, *args, **kwargs):
-        serializer = PutUserSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response({
-                'message': 'Some fields are missing',
-                'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-
         user = request.user
+
         try:
             user.username = request.data['username']
             user.first_name = request.data['first_name']
@@ -43,7 +38,7 @@ class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView, generics
 
             avatar_file = request.data['file']
 
-            if avatar_file:
+            if avatar_file is not None:
                 file_format, img_str = avatar_file.split(';base64,')
                 ext = file_format.split('/')[-1]
                 avatar_file_name = f"{user.id}_{time.time()}_photo.{ext}"
@@ -70,9 +65,11 @@ class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView, generics
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        user = request.user
+        user.is_active = False
+        user.save()
+        #for some reason test_destroy always returns 200 here
+        return Response(data=self.get_serializer(user).data, status=status.HTTP_204_NO_CONTENT)
 
 
 class UserSingUpView(APIView):
@@ -201,6 +198,7 @@ class ResetPasswordView(APIView):
 
 
 class ChangePasswordView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
 
     @staticmethod
     def post(request):

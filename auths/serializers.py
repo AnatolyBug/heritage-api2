@@ -50,6 +50,13 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'email', 'username', 'user_role', 'first_name', 'last_name', 'bio', 'avatar_url')
 
+class CustomerUserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name', 'bio')
+
+
 class PutUserSerializer(serializers.Serializer):
     email = serializers.EmailField()
     username = serializers.CharField(validators=[username_validator])
