@@ -62,7 +62,7 @@ class UserViewsTest(TestCase):
         self.assertEqual(rv_login_2.status_code, 200)
 
 
-    def test_change_password(self):
+    def test_forgot_password(self):
         rv = self.client.post('/api/auth/register/', data=self.user_dict())
         rv_forgot_pwd = self.client.post('/api/auth/forgot_password/', data=dict(email=self.user_dict()['email']))
         self.assertEqual(rv_forgot_pwd.status_code, 200)
@@ -84,6 +84,7 @@ class UserViewsTest(TestCase):
                                                                   password=self.user_dict()['password']))
 
         user_updated = self.user_dict()
+        user_updated['file'] = None
         user_updated['username'] = 'alreadyexists'
 
         auth_headers = {'HTTP_AUTHORIZATION': 'Bearer ' + rv_login.data['access']}
@@ -104,7 +105,33 @@ class UserViewsTest(TestCase):
                                                                   password=self.user_dict()['password']))
         auth_headers = {'HTTP_AUTHORIZATION': 'Bearer ' + rv_login.data['access']}
         rv = self.client.delete('/api/auth/user/', **auth_headers)
-        self.assertEqual(rv_login.status_code, 204)
+        assert User.objects.filter(is_active=False).count() == 1
+        #self.assertEqual(rv_login.status_code, 204)
+
+    def test_change_password(self):
+        rv = self.client.post('/api/auth/register/', data=self.user_dict())
+        rv_login = self.client.post('/api/auth/login/', data=dict(email=self.user_dict()['email'],
+                                                                  password=self.user_dict()['password']))
+        auth_headers = {'HTTP_AUTHORIZATION': 'Bearer ' + rv_login.data['access']}
+        data={}
+        data['old_password'] = self.user_dict()['password']
+        data['new_password'] = 'NewPassword101'
+
+        rv = self.client.post('/api/auth/change_password/', data=data, **auth_headers)
+        self.assertEqual(rv.status_code, 200)
+
+        #login with new password
+        rv_login = self.client.post('/api/auth/login/', data=dict(email=self.user_dict()['email'],
+                                                                  password='NewPassword101'))
+        self.assertEqual(rv.status_code, 200)
+        auth_headers = {'HTTP_AUTHORIZATION': 'Bearer ' + rv_login.data['access']}
+
+        #check if token works
+        rv = self.client.get('/api/auth/user/', **auth_headers)
+        self.assertEqual(rv.status_code, 200)
+
+
+
 
 
 

@@ -68,8 +68,7 @@ class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView, generics
         user = request.user
         user.is_active = False
         user.save()
-        # instance = self.get_object()
-        # self.perform_destroy(instance)
+        #for some reason test_destroy always returns 200 here
         return Response(data=self.get_serializer(user).data, status=status.HTTP_204_NO_CONTENT)
 
 
