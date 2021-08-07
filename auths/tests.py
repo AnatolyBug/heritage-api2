@@ -84,7 +84,7 @@ class UserViewsTest(TestCase):
                                                                   password=self.user_dict()['password']))
 
         user_updated = self.user_dict()
-        user_updated['file'] = None
+        user_updated['file'] = ''
         user_updated['username'] = 'alreadyexists'
 
         auth_headers = {'HTTP_AUTHORIZATION': 'Bearer ' + rv_login.data['access']}
