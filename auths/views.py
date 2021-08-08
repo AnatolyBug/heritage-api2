@@ -38,7 +38,7 @@ class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView, generics
 
             avatar_file = request.data['file']
 
-            if avatar_file is not None:
+            if not avatar_file:
                 file_format, img_str = avatar_file.split(';base64,')
                 ext = file_format.split('/')[-1]
                 avatar_file_name = f"{user.id}_{time.time()}_photo.{ext}"
@@ -68,8 +68,7 @@ class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView, generics
         user = request.user
         user.is_active = False
         user.save()
-        # instance = self.get_object()
-        # self.perform_destroy(instance)
+        #for some reason test_destroy always returns 200 here
         return Response(data=self.get_serializer(user).data, status=status.HTTP_204_NO_CONTENT)
 
 

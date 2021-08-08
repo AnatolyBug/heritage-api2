@@ -19,7 +19,7 @@ class UserViewSet(viewsets.ViewSet):
             get_users = User.objects.exclude(id=user_id)
             user_list = get_users.filter(user_role='customer').order_by('-created_date')
 
-        page = request.query_params['page']
+        page = request.query_params.get('page', 1)
         paginator = Paginator(user_list, 20)
 
         try:
@@ -43,7 +43,7 @@ class UserViewSet(viewsets.ViewSet):
     @staticmethod
     def retrieve(request, pk=None):
         user_role = request.user.user_role
-        user = User.objects.filter(pk=pk).first()
+        user = User.objects.filter(username=pk).first()
         if user:
             if user_role == 'superuser' or user_role == 'admin':
                 serializer = UserSerializer(user)
