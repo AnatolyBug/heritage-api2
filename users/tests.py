@@ -29,8 +29,7 @@ class UsersViewsTest(APITestCase):
                                 password='TestPassword123')
 
     def superuser(self):
-        return dict(email=f'admin@example.com', username=f'adminuser', user_role='admin',
-            password='TestPassword123', id=30)
+        return dict(email=f'admin@example.com', username=f'adminuser', password='TestPassword123')
 
 
     def test_list(self):
@@ -46,15 +45,22 @@ class UsersViewsTest(APITestCase):
 
     def test_retrieve(self):
         #User 100 id shouldn't exist
-        rv = self.client.get('/api/users/100/')
+        rv = self.client.get('/api/users/userdoesnotexist/')
         self.assertEqual(rv.status_code, 204)
 
         rv = self.client.get('/api/users/username1/')
         self.assertEqual(rv.status_code, 200)
 
     def test_superuser_update(self):
-        User.objects.create(**self.superuser())
-        rv = self.client.post('/api/auth/login/', data=dict(email=self.superuser()['email'], password=self.superuser()['password']))
+        #User.objects.create(**self.superuser())
+        rv = self.client.post('/api/auth/register/', data=self.superuser())
+        rv = self.client.post('/api/auth/login/', data=dict(email=self.superuser()['email'],
+                                                            password=self.superuser()['password']))
+        superuser = User.objects.get(username=self.superuser()['username'])
+        auth_headers = {'HTTP_AUTHORIZATION': 'Bearer ' + rv.data['access']}
+
+        rv = self.client.post('/api/auth/login/', data=dict(email=self.superuser()['email'],
+                                                            password=self.superuser()['password']), **auth_headers)
         #query = str(User.objects.all().query)
         #df = pd.read_sql_query(query, connection)
         self.assertEqual(rv.status_code, 200)
