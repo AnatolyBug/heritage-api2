@@ -27,22 +27,28 @@ class FriendlyTagViewSet(viewsets.ViewSet):
 
     @staticmethod
     def create(request):
-        serializer = CreateFriendlyTagSerializer(data=request.data)
+        user_role = request.user.user_role
 
-        if not serializer.is_valid():
-            return Response({
-                'message': 'Some fields are missing',
-                'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        data = serializer.validated_data
+        if user_role == 'superuser' or user_role == 'admin':
+            serializer = CreateFriendlyTagSerializer(data=request.data)
 
-        try:
-            friendly_tag = FriendlyTags.objects.create(tag_name=data['tag_name'])
-        except IntegrityError:
-            return Response({
-                'message': 'Friendly Tag already exists.'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            if not serializer.is_valid():
+                return Response({
+                    'message': 'Some fields are missing',
+                    'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            data = serializer.validated_data
 
-        return Response(data=FriendlyTagSerializer(friendly_tag).data, status=status.HTTP_201_CREATED)
+            try:
+                friendly_tag = FriendlyTags.objects.create(tag_name=data['tag_name'])
+            except IntegrityError:
+                return Response({
+                    'message': 'Friendly Tag already exists.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            return Response(data=FriendlyTagSerializer(friendly_tag).data, status=status.HTTP_201_CREATED)
+        else:
+            response = 'You are not allowed to create friendly tags.'
+            return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
 
     @staticmethod
     def update(request, pk=None):
@@ -90,22 +96,27 @@ class TransportMethodViewSet(viewsets.ViewSet):
 
     @staticmethod
     def create(request):
-        serializer = CreateTransportMethodSerializer(data=request.data)
+        user_role = request.user.user_role
+        if user_role == 'superuser' or user_role == 'admin':
+            serializer = CreateTransportMethodSerializer(data=request.data)
 
-        if not serializer.is_valid():
-            return Response({
-                'message': 'Some fields are missing',
-                'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        data = serializer.validated_data
+            if not serializer.is_valid():
+                return Response({
+                    'message': 'Some fields are missing',
+                    'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            data = serializer.validated_data
 
-        try:
-            transport_method = TransportMethods.objects.create(transport_name=data['transport_method'])
-        except IntegrityError:
-            return Response({
-                'message': 'Transport Name already exists.'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                transport_method = TransportMethods.objects.create(transport_name=data['transport_method'])
+            except IntegrityError:
+                return Response({
+                    'message': 'Transport Name already exists.'
+                }, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(data=TransportMethodSerializer(transport_method).data, status=status.HTTP_201_CREATED)
+            return Response(data=TransportMethodSerializer(transport_method).data, status=status.HTTP_201_CREATED)
+        else:
+            response = 'You are not allowed to create a transport method.'
+            return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
 
     @staticmethod
     def update(request, pk=None):
@@ -148,40 +159,46 @@ class GuideViewSet(viewsets.ViewSet):
     @staticmethod
     def create(request):
         user_id = request.user.id
-        serializer = CreateGuideSerializer(data=request.data)
+        user_email_verified = request.user.email_confirmed
 
-        if not serializer.is_valid():
-            return Response({
-                'message': 'Some fields are missing',
-                'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        if user_email_verified:
+            serializer = CreateGuideSerializer(data=request.data)
 
-        data = serializer.validated_data
+            if not serializer.is_valid():
+                return Response({
+                    'message': 'Some fields are missing',
+                    'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-        image_file = request.data['image_file']
-        img_file_name = ''
+            data = serializer.validated_data
 
-        if image_file:
-            file_format, img_str = image_file.split(';base64,')
-            ext = file_format.split('/')[-1]
-            img_file_name = f"{user_id}_{time.time()}_guide_image.{ext}"
+            image_file = request.data['image_file']
+            img_file_name = ''
 
-            with open(img_file_name, 'wb') as destination:
-                destination.write(base64.b64decode(img_str))
+            if image_file:
+                file_format, img_str = image_file.split(';base64,')
+                ext = file_format.split('/')[-1]
+                img_file_name = f"{user_id}_{time.time()}_guide_image.{ext}"
 
-            bucket_name = os.getenv('AWS_GUIDE_IMAGE_BUCKET_NAME')
+                with open(img_file_name, 'wb') as destination:
+                    destination.write(base64.b64decode(img_str))
 
-            upload = upload_file_to_aws(file_name=img_file_name, bucket=bucket_name)
-            if upload is True:
-                os.remove(img_file_name)
+                bucket_name = os.getenv('AWS_GUIDE_IMAGE_BUCKET_NAME')
 
-        guide = Guides.objects.create(user_id=user_id, main_transport_method_id=data['main_transport_method'],
-                                      friendly_tag_id=data['friendly_tag'], duration=data['duration'],
-                                      transport_methods=data['transport_methods'], map_image_url=img_file_name)
+                upload = upload_file_to_aws(file_name=img_file_name, bucket=bucket_name)
+                if upload is True:
+                    os.remove(img_file_name)
 
-        for place_id in data['place']:
-            guide.place.add(place_id)
+            guide = Guides.objects.create(user_id=user_id, main_transport_method_id=data['main_transport_method'],
+                                          friendly_tag_id=data['friendly_tag'], duration=data['duration'],
+                                          transport_methods=data['transport_methods'], map_image_url=img_file_name)
 
-        return Response(data=GuideSerializer(guide).data, status=status.HTTP_201_CREATED)
+            for place_id in data['place']:
+                guide.place.add(place_id)
+
+            return Response(data=GuideSerializer(guide).data, status=status.HTTP_201_CREATED)
+        else:
+            response = 'Please verify your email address to create guides.'
+            return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
 
     @staticmethod
     def update(request, pk=None):
