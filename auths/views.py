@@ -38,7 +38,7 @@ class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView, generics
 
             avatar_file = request.data['file']
 
-            if not avatar_file:
+            if avatar_file:
                 file_format, img_str = avatar_file.split(';base64,')
                 ext = file_format.split('/')[-1]
                 avatar_file_name = f"{user.id}_{time.time()}_photo.{ext}"
