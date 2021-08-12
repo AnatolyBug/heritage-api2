@@ -48,21 +48,22 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'user_role', 'first_name', 'last_name', 'bio', 'avatar_url')
+        fields = ('id', 'email', 'username', 'user_role', 'first_name',
+                  'last_name', 'bio', 'avatar_url', 'created_date')
 
 class CustomerUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'bio')
+        fields = ('username', 'first_name', 'last_name', 'bio', 'avatar_url')
 
 
 class PutUserSerializer(serializers.Serializer):
     email = serializers.EmailField()
     username = serializers.CharField(validators=[username_validator])
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-    bio = serializers.CharField()
+    first_name = serializers.CharField(allow_blank=True)
+    last_name = serializers.CharField(allow_blank=True)
+    bio = serializers.CharField(allow_blank=True)
 
 class CreateUserSerializer(PutUserSerializer):
     password = serializers.CharField(validators=[password_validator])
