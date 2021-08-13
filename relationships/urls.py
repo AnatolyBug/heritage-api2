@@ -7,7 +7,6 @@ router.register('', views.RelationshipViewSet, basename='relationship')
 
 urlpatterns = [
     path('follow/', views.FollowRelationshipView.as_view(), name='follow'),
-    path('update/', views.UpdateRelationshipView.as_view(), name='update'),
 ]
 
 urlpatterns += router.urls

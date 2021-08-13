@@ -29,7 +29,7 @@ class FollowRelationshipView(APIView):
         if not check_to_user:
             return Response({'error': 'No such user exists'}, status=status.HTTP_404_NOT_FOUND)
         if from_user_id == to_user_id:
-            return Response({'error': 'SELF'}, status=status.HTTP_204_NO_CONTENT)
+            return Response({'status': 'SELF'}, status=status.HTTP_204_NO_CONTENT)
 
         current_rel = Relationships.objects.filter(from_user_id=from_user_id, to_user_id=to_user_id).first()
         rel_requested = data['status']
@@ -41,6 +41,9 @@ class FollowRelationshipView(APIView):
             relationship.save()
             return Response({'status': rel_requested}, status=status.HTTP_201_CREATED)
 
+        elif not current_rel:
+            return Response({'error': 'The requests are incorrect.'}, status=status.HTTP_400_BAD_REQUEST)
+
         elif (current_rel.status == 'FOLLOW' and rel_requested == 'UNFOLLOW') or \
              (current_rel.status == 'BLOCK' and rel_requested == 'UNBLOCK') or \
              (current_rel.status in ['UNFOLLOW', 'UNBLOCK'] and rel_requested in ['FOLLOW', 'BLOCK']):
@@ -51,34 +54,16 @@ class FollowRelationshipView(APIView):
         else:
             return Response({'error': 'The requests are incorrect.'}, status=status.HTTP_400_BAD_REQUEST)
 
-
-class UpdateRelationshipView(APIView):
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def get_object(self, pk):
+    @staticmethod
+    def get_object(pk):
         try:
             return Relationships.objects.get(pk=pk)
         except Relationships.DoesNotExist:
             raise Http404
 
-    def put(self, request, pk):
-        relationship = self.get_object(pk)
-        rel_requested = request.data['status']
-
-        if (relationship.status == 'FOLLOW' and rel_requested == 'UNFOLLOW') or \
-           (relationship.status == 'BLOCK' and rel_requested == 'UNBLOCK') or \
-           (relationship.status in ['UNFOLLOW', 'UNBLOCK'] and rel_requested in ['FOLLOW', 'BLOCK']):
-
-            relationship.status = rel_requested
-            relationship.save()
-
-            return Response(data=RelationshipSerializer(relationship).data, status=status.HTTP_200_OK)
-        else:
-            response = 'Your update request is incorrect.'
-            return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk):
-        relationship = self.get_object(pk)
+    @staticmethod
+    def delete(request, pk):
+        relationship = FollowRelationshipView.get_object(pk)
         relationship.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
