@@ -51,7 +51,14 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'email', 'username', 'user_role', 'first_name',
                   'last_name', 'bio', 'avatar_url', 'created_date')
 
+
 class CustomerUserSerializer(serializers.ModelSerializer):
+    avatar_url = serializers.SerializerMethodField()
+
+    def get_avatar_url(self, obj):
+        bucket_name = os.getenv('AWS_AVATAR_IMAGE_BUCKET_NAME')
+        content_type = 'image/png'
+        return generate_aws_url(key=obj.avatar_url, bucket=bucket_name, content_type=content_type)
 
     class Meta:
         model = User
@@ -64,6 +71,7 @@ class PutUserSerializer(serializers.Serializer):
     first_name = serializers.CharField(allow_blank=True)
     last_name = serializers.CharField(allow_blank=True)
     bio = serializers.CharField(allow_blank=True)
+
 
 class CreateUserSerializer(PutUserSerializer):
     password = serializers.CharField(validators=[password_validator])

@@ -101,7 +101,7 @@ class UserSingUpView(APIView):
             TokenGenerator().make_token(user)
         )
 
-        if os.getenv('TEST') is not True:
+        if os.getenv('TEST') is False:
             try:
                 name = user.first_name + ' ' + user.last_name
                 message_body = ({
@@ -156,7 +156,7 @@ class ForgotPasswordView(APIView):
                 TokenGenerator().make_token(user)
             )
 
-            if os.getenv('TEST') is not True:
+            if os.getenv('TEST') is False:
                 try:
                     name = user.first_name + ' ' + user.last_name
                     message_body = ({
