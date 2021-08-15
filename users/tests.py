@@ -54,7 +54,8 @@ class UsersViewsTest(APITestCase):
         rv = self.client.get('/api/users/444/', **self.auth_headers)
         self.assertEqual(rv.status_code, 404)
 
-        rv = self.client.get('/api/users/1/', **self.auth_headers)
+        id = User.objects.get(username='username1').id
+        rv = self.client.get('/api/users/'+str(id)+'/', **self.auth_headers)
         self.assertEqual(rv.status_code, 200)
 
     def test_superuser_update(self):
@@ -70,9 +71,6 @@ class UsersViewsTest(APITestCase):
                                                             password=self.superuser()['password']), **auth_headers)
         self.assertEqual(rv.status_code, 200)
 
-        #query = str(User.objects.all().query)
-        #df = pd.read_sql_query(query, connection)
-
         user_updated_bad = dict(email='newemail@user.com', username='username1', first_name='New',
                     last_name='User', bio='')
 
@@ -82,15 +80,17 @@ class UsersViewsTest(APITestCase):
         self.assertEqual(rv.status_code, 404)
 
         #username already exists
+        id = User.objects.get(username='username0').id
+        query = str(User.objects.all().query)
+        df = pd.read_sql_query(query, connection)
         with transaction.atomic():
-            rv = self.client.put('/api/users/1/', data=json.dumps(user_updated_bad), content_type='application/json',
+            rv = self.client.put('/api/users/'+str(id)+'/', data=json.dumps(user_updated_bad), content_type='application/json',
                              **auth_headers)
         self.assertEqual(rv.status_code, 400)
         self.assertContains(rv, 'already exists', status_code=400)
 
         user_updated = self.user_updated()
-
-        rv = self.client.put('/api/users/1/', data=json.dumps(user_updated), content_type='application/json',
+        rv = self.client.put('/api/users/'+str(id)+'/', data=json.dumps(user_updated), content_type='application/json',
                              **auth_headers)
         self.assertEqual(rv.status_code, 200)
         self.assertContains(rv, 'created_date')

@@ -1,6 +1,13 @@
 from rest_framework import serializers
 from .models import Relationships
-from auths.serializers import CustomerUserSerializer
+from auths.models import User
+
+
+class CustomerRelUserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('id', 'username')
 
 
 class RelationshipSerializer(serializers.ModelSerializer):
@@ -8,14 +15,14 @@ class RelationshipSerializer(serializers.ModelSerializer):
     to_user = serializers.SerializerMethodField()
 
     def get_from_user(self, obj):
-        return CustomerUserSerializer(obj.from_user).data
+        return CustomerRelUserSerializer(obj.from_user).data
 
     def get_to_user(self, obj):
-        return CustomerUserSerializer(obj.to_user).data
+        return CustomerRelUserSerializer(obj.to_user).data
 
     class Meta:
         model = Relationships
-        fields = 'from_user', 'to_user', 'status'
+        fields = 'from_user', 'to_user', 'status', 'id'
 
 
 class CreateRelationshipSerializer(serializers.Serializer):
