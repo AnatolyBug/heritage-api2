@@ -1,7 +1,13 @@
 from rest_framework import serializers
 from .models import Relationships
-#from auths.serializers import CustomerUserSerializer
 from auths.models import User
+
+
+class CustomerRelUserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('id', 'username')
 
 
 class RelationshipSerializer(serializers.ModelSerializer):
@@ -22,10 +28,3 @@ class RelationshipSerializer(serializers.ModelSerializer):
 class CreateRelationshipSerializer(serializers.Serializer):
     to_user = serializers.IntegerField()
     status = serializers.CharField()
-
-class CustomerRelUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('username', 'id')
-
-
