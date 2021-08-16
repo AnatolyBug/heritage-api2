@@ -1,58 +1,87 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { connect } from "react-redux";
 import { Redirect } from "react-router";
-// @material-ui/core components
+import { toastr } from "react-redux-toastr";
 import { makeStyles } from "@material-ui/core/styles";
-import InputAdornment from "@material-ui/core/InputAdornment";
-import Icon from "@material-ui/core/Icon";
-
-// @material-ui/icons
+import IconButton from '@material-ui/core/IconButton';
+import InputAdornment from '@material-ui/core/InputAdornment';
+import FormHelperText from '@material-ui/core/FormHelperText';
+import Visibility from '@material-ui/icons/Visibility';
+import VisibilityOff from '@material-ui/icons/VisibilityOff';
 import Email from "@material-ui/icons/Email";
-// import IconButton from '@material-ui/core/IconButton';
-// import Input from '@material-ui/core/Input';
-// import FilledInput from '@material-ui/core/FilledInput';
-// import OutlinedInput from '@material-ui/core/OutlinedInput';
-// import InputLabel from '@material-ui/core/InputLabel';
-// import FormHelperText from '@material-ui/core/FormHelperText';
-// import FormControl from '@material-ui/core/FormControl';
-// import TextField from '@material-ui/core/TextField';
-// import Visibility from '@material-ui/icons/Visibility';
-// import VisibilityOff from '@material-ui/icons/VisibilityOff';
-
 import GridContainer from "components/Grid/GridContainer.js";
 import GridItem from "components/Grid/GridItem.js";
-import CustomInput from "components/CustomInput/CustomInput.js";
 import Button from "components/CustomButtons/Button.js";
 import Card from "components/Card/Card.js";
 import CardBody from "components/Card/CardBody.js";
-import CardHeader from "components/Card/CardHeader.js";
-import CardFooter from "components/Card/CardFooter.js";
-
-import styles from "assets/jss/material-dashboard-pro-react/views/loginPageStyle.js";
-const useStyles = makeStyles(styles);
-
+import styles from "assets/jss/material-dashboard-pro-react/views/registerPageStyle";
 import { login } from "redux/actions/auth";
+import { validateEmail } from "helpers/commonHelper";
+import CustomInput from "../../components/CustomInput/CustomInput";
+
+const useStyles = makeStyles(styles);
 
 const LoginPage = (props) => {
   const classes = useStyles();
-  const [cardAnimation, setCardAnimation] = useState("cardHidden");
-
-  useEffect(() => {
-    let id = setTimeout(function() {
-      setCardAnimation("");
-    }, 700);
-    return function cleanup() {
-      window.clearTimeout(id);
-    };
+  // const [cardAnimation, setCardAnimation] = useState("cardHidden");
+  const [values, setValues] = useState({
+    email: '',
+    password: '',
+    showPassword: false,
   });
+  const [errorText, setErrorText] = useState({
+    email: '',
+    password: ''
+  })
 
-  // handleChangeInput = e => {
-  //   let errors = this.state.errors;
-  //   if (errors[e.target.name] !== '') {
-  //     errors[e.target.name] = '';
-  //     this.setState(errors);
-  //   }
-  // };
+  // useEffect(() => {
+  //   let id = setTimeout(function() {
+  //     setCardAnimation("");
+  //   }, 700);
+  //   return function cleanup() {
+  //     window.clearTimeout(id);
+  //   };
+  // });
+
+  const handleChange = (prop) => (event) => {
+    setValues({ ...values, [prop]: event.target.value });
+    if (event.target.value !== '') {
+      setErrorText({...errorText, [prop]: ''});
+    }
+  };
+
+  const handleClickShowPassword = () => {
+    setValues({ ...values, showPassword: !values.showPassword });
+  };
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
+
+  const handleLogin = e => {
+    e.preventDefault();
+
+    if (values.email === '') {
+      setErrorText({...errorText, email: 'Email is required'});
+      return;
+    }
+
+    if (!validateEmail(values.email)) {
+      setErrorText({...errorText, email: 'Email is invalid'});
+      return;
+    }
+
+    if (values.password === '') {
+      setErrorText({...errorText, password: 'Password is required'});
+      return;
+    }
+
+    props.login(values.email, values.password)
+      .catch((err) => {
+        console.log(err)
+        toastr.error('Fail!', 'Please check your email and password.')
+      })
+  };
 
   if (props.isAuthenticated) {
     return (
@@ -62,80 +91,76 @@ const LoginPage = (props) => {
     return (
       <div className={classes.container}>
         <GridContainer justify="center">
-          <GridItem xs={12} sm={6} md={4}>
-            <form>
-              <Card login className={classes[cardAnimation]}>
-                <CardHeader
-                  className={`${classes.cardHeader} ${classes.textCenter}`}
-                  color="rose"
-                >
-                  <h4 className={classes.cardTitle}>Log in</h4>
-                  {/*<div className={classes.socialLine}>*/}
-                  {/*  {[*/}
-                  {/*    "fab fa-facebook-square",*/}
-                  {/*    "fab fa-twitter",*/}
-                  {/*    "fab fa-google-plus"*/}
-                  {/*  ].map((prop, key) => {*/}
-                  {/*    return (*/}
-                  {/*      <Button*/}
-                  {/*        color="transparent"*/}
-                  {/*        justIcon*/}
-                  {/*        key={key}*/}
-                  {/*        className={classes.customButtonClass}*/}
-                  {/*      >*/}
-                  {/*        <i className={prop} />*/}
-                  {/*      </Button>*/}
-                  {/*    );*/}
-                  {/*  })}*/}
-                  {/*</div>*/}
-                </CardHeader>
-                <CardBody>
-                  <CustomInput
-                    labelText="Email..."
-                    id="email"
-                    formControlProps={{
-                      fullWidth: true
-                    }}
-                    inputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <Email className={classes.inputAdornmentIcon} />
-                        </InputAdornment>
-                      )
-                    }}
-                  />
-                  <CustomInput
-                    labelText="Password"
-                    id="password"
-                    formControlProps={{
-                      fullWidth: true
-                    }}
-                    inputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <Icon className={classes.inputAdornmentIcon}>
-                            lock_outline
-                          </Icon>
-                        </InputAdornment>
-                      ),
-                      type: "password",
-                      autoComplete: "off"
-                    }}
-                  />
-                </CardBody>
-                <CardFooter className={classes.justifyContentCenter}>
-                  <row>
-                  <Button color="rose" simple size="lg" block>
-                    Let&apos; s Go
-                  </Button>
-                  </row>
-                  <row>
-                  <span>Don&apos;t you have an account? </span>
-                  <a href="/register">Join</a>
-                  </row>
-                </CardFooter>
-              </Card>
-            </form>
+          <GridItem xs={12} sm={12} md={5}>
+            <Card className={classes.cardSignup}>
+              <h2 className={classes.cardTitle}>Log in</h2>
+              <CardBody>
+                <GridContainer justify="center">
+                  <GridItem xs={12} sm={8} md={10}>
+                    <form className={classes.form}>
+                      <CustomInput
+                        formControlProps={{
+                          fullWidth: true,
+                          className: classes.customFormControlClasses
+                        }}
+                        value={values.email}
+                        onChange={handleChange('email')}
+                        inputProps={{
+                          startAdornment: (
+                            <InputAdornment
+                              position="start"
+                              className={classes.inputAdornment}
+                            >
+                              <IconButton aria-label="email">
+                                <Email className={classes.inputAdornmentIcon} />
+                              </IconButton>
+                            </InputAdornment>
+                          ),
+                          placeholder: "Email..."
+                        }}
+                      />
+                      <FormHelperText error>{errorText.email}</FormHelperText>
+                      <CustomInput
+                        formControlProps={{
+                          fullWidth: true,
+                          className: classes.customFormControlClasses
+                        }}
+                        value={values.password}
+                        onChange={handleChange('password')}
+                        inputProps={{
+                          startAdornment: (
+                            <InputAdornment
+                              position="start"
+                              className={classes.inputAdornment}
+                            >
+                              <IconButton
+                                aria-label="toggle password visibility"
+                                onClick={handleClickShowPassword}
+                                onMouseDown={handleMouseDownPassword}
+                              >
+                                {values.showPassword ? <Visibility /> : <VisibilityOff />}
+                              </IconButton>
+                          </InputAdornment>
+                          ),
+                          type: values.showPassword ? "text" : "password",
+                          placeholder: "Password..."
+                        }}
+                      />
+                      <FormHelperText error>{errorText.password}</FormHelperText>
+                      <div className={classes.center}>
+                        <Button color="primary" round onClick={handleLogin}>
+                          Log in
+                        </Button>
+                        <div>
+                          Don&apos;t you have an account? Please
+                          <a href="/login"> Join</a>
+                        </div>
+                      </div>
+                    </form>
+                  </GridItem>
+                </GridContainer>
+              </CardBody>
+            </Card>
           </GridItem>
         </GridContainer>
       </div>
