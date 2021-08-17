@@ -10,9 +10,10 @@ from django.core.validators import RegexValidator
 
 
 username_validator = RegexValidator("^[a-zA-Z0-9_.-]{4,25}$",
-                                        "username can only contain alphanumeric characters, ., _,-")
+                                    "username can only contain alphanumeric characters, ., _,-")
 password_validator = RegexValidator("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,32}$",
-                                        "password must contain at least an Uppercase, lowercase and a number")
+                                    "password must contain at least an Uppercase, lowercase and a number")
+
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
@@ -68,9 +69,6 @@ class CustomerUserSerializer(serializers.ModelSerializer):
 class PutUserSerializer(serializers.Serializer):
     email = serializers.EmailField()
     username = serializers.CharField(validators=[username_validator])
-    first_name = serializers.CharField(allow_blank=True)
-    last_name = serializers.CharField(allow_blank=True)
-    bio = serializers.CharField(allow_blank=True)
 
 
 class CreateUserSerializer(PutUserSerializer):
