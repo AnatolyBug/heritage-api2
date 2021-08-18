@@ -15,6 +15,7 @@ import Login from "containers/Auth/LoginPage";
 import Register from "containers/Auth/RegisterPage";
 import EmailVerification from "containers/Auth/EmailVerificationPage";
 import ForgotPassword from "containers/Auth/ForgotPasswordPage";
+import ResetPassword from "containers/Auth/ResetPasswordPage";
 
 ReactDOM.render(
   <Provider store={store}>
@@ -25,8 +26,8 @@ ReactDOM.render(
             <Route exact path="/login" component={Login}/>
             <Route exact path="/login/email_verification" component={EmailVerification}/>
             <Route exact path="/register" component={Register}/>
-            <Route exact path="/forgot_password" component={ForgotPassword}/>
-            {/*<Route exact path="/auth/reset_password" component={ResetPassword}/>*/}
+            <Route exact path="/login/forgot_password" component={ForgotPassword}/>
+            <Route exact path="/login/reset_password" component={ResetPassword}/>
             <PrivateRoute path="/" component={Layout}/>
           </Switch>
           <ReduxToastr timeOut={3000} transitionIn="fadeIn" transitionOut="fadeOut"/>
