@@ -4,6 +4,7 @@ import base64
 from django.core.mail import EmailMessage
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.db import IntegrityError
+from django.http import HttpResponseRedirect
 from django.utils.encoding import force_bytes, force_text
 from django.template.loader import get_template
 from rest_framework import permissions, generics, status
@@ -13,6 +14,7 @@ from rest_framework.response import Response
 from .models import User
 from utils.auth import TokenGenerator
 from utils.aws import upload_file_to_aws
+from constants import TEST
 from .serializers import MyTokenObtainPairSerializer, UserSerializer, CreateUserSerializer, ChangePasswordSerializer
 
 
@@ -68,7 +70,7 @@ class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView, generics
         user = request.user
         user.is_active = False
         user.save()
-        #for some reason test_destroy always returns 200 here
+
         return Response(data=self.get_serializer(user).data, status=status.HTTP_204_NO_CONTENT)
 
 
@@ -81,7 +83,8 @@ class UserSingUpView(APIView):
         if not serializer.is_valid():
             return Response({
                 'message': 'Some fields are missing',
-                'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+                'errors': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
         data = serializer.validated_data
         try:
             user = User.objects.create(username=data['username'].lower(), email=data['email'])
@@ -99,7 +102,7 @@ class UserSingUpView(APIView):
             TokenGenerator().make_token(user)
         )
 
-        if os.getenv('TEST') is False:
+        if not TEST:
             try:
                 message_body = ({
                     'name': user.username,
@@ -115,7 +118,7 @@ class UserSingUpView(APIView):
                 pass
 
         response = UserSerializer(user).data
-        response['email_verification_url'] = email_verification_url
+        response['email_verification_url'] = email_verification_url if TEST else ''
 
         return Response(data=response, status=status.HTTP_201_CREATED)
 
@@ -134,7 +137,7 @@ class EmailVerificationView(APIView):
             user.save()
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return HttpResponseRedirect('/login')
 
 
 class ResendEmailView(APIView):
@@ -143,32 +146,34 @@ class ResendEmailView(APIView):
     @staticmethod
     def post(request):
         email = request.data['email']
+        user = User.objects.filter(email=email).first()
 
-        user = User.objects.filter(email=email)
-        if user:
+        if user and not user.email_confirmed:
             email_verification_url = '%s/api/auth/email_verification?uid=%s&token=%s' % (
                 request.build_absolute_uri('/')[:-1],
                 urlsafe_base64_encode(force_bytes(user.pk)),
                 TokenGenerator().make_token(user)
             )
 
-            try:
-                message_body = ({
-                    'name': user.username,
-                    'email_verification_url': email_verification_url
-                })
-                message = get_template('email_verification.html').render(message_body)
-                email = EmailMessage(
-                    'Email verification', message, to=[user.email]
-                )
-                email.content_subtype = 'html'
-                email.send()
-            except Exception:
-                pass
-
+            if not TEST:
+                try:
+                    message_body = ({
+                        'name': user.username,
+                        'email_verification_url': email_verification_url
+                    })
+                    message = get_template('email_verification.html').render(message_body)
+                    email = EmailMessage(
+                        'Email verification', message, to=[user.email]
+                    )
+                    email.content_subtype = 'html'
+                    email.send()
+                except Exception:
+                    pass
             return Response(data='Successfully sent', status=status.HTTP_200_OK)
+        elif user and user.email_confirmed:
+            return Response(data='verified', status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(data='No such user', status=status.HTTP_400_BAD_REQUEST)
+            return Response(data='no_user', status=status.HTTP_400_BAD_REQUEST)
 
 
 class ForgotPasswordView(APIView):
@@ -177,17 +182,16 @@ class ForgotPasswordView(APIView):
     @staticmethod
     def post(request):
         email = request.data['email']
-        check_user = User.objects.filter(email=email).exists()
+        user = User.objects.filter(email=email).first()
 
-        if check_user:
-            user = User.objects.get(email=email)
+        if user and user.email_confirmed:
             password_reset_url = '%s/login/reset_password?uid=%s&token=%s' % (
                 request.build_absolute_uri('/')[:-1],
                 urlsafe_base64_encode(force_bytes(user.pk)),
                 TokenGenerator().make_token(user)
             )
 
-            if os.getenv('TEST') is False:
+            if not os.getenv('TEST'):
                 try:
                     name = user.first_name + ' ' + user.last_name
                     message_body = ({
@@ -204,6 +208,8 @@ class ForgotPasswordView(APIView):
                     pass
             return Response(data={'password_reset_url': password_reset_url},
                             status=status.HTTP_200_OK)
+        elif user and not user.email_confirmed:
+            return Response(data='unverified', status=status.HTTP_403_FORBIDDEN)
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
