@@ -13,6 +13,8 @@ import PrivateRoute from "components/PrivateRoute";
 import Layout from "containers/Layout";
 import Login from "containers/Auth/LoginPage";
 import Register from "containers/Auth/RegisterPage";
+import EmailVerification from "containers/Auth/EmailVerificationPage";
+import ForgotPassword from "containers/Auth/ForgotPasswordPage";
 
 ReactDOM.render(
   <Provider store={store}>
@@ -21,9 +23,9 @@ ReactDOM.render(
         <React.Fragment>
           <Switch>
             <Route exact path="/login" component={Login}/>
-            {/*<Route exact path="/login/email_verification" component={EmailVerification}/>*/}
+            <Route exact path="/login/email_verification" component={EmailVerification}/>
             <Route exact path="/register" component={Register}/>
-            {/*<Route exact path="/reset_password" component={ResetPasswordEmail}/>*/}
+            <Route exact path="/forgot_password" component={ForgotPassword}/>
             {/*<Route exact path="/auth/reset_password" component={ResetPassword}/>*/}
             <PrivateRoute path="/" component={Layout}/>
           </Switch>

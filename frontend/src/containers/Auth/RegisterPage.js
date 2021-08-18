@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { toastr } from "react-redux-toastr";
+import { useHistory } from "react-router-dom";
 import { makeStyles } from "@material-ui/core/styles";
 import InputAdornment from "@material-ui/core/InputAdornment";
 import Icon from "@material-ui/core/Icon";
@@ -21,6 +22,7 @@ const useStyles = makeStyles(styles);
 
 export default function RegisterPage() {
   const classes = useStyles();
+  const history = useHistory();
   const [values, setValues] = useState({
     username: '',
     email: '',
@@ -82,8 +84,10 @@ export default function RegisterPage() {
       password: values.password,
     }, {}, false).then(() => {
       toastr.success('Success!', 'User was successfully registered.');
+      localStorage.setItem('email', values.email);
       history.push('/login/email_verification');
-    }).catch(() => {
+    }).catch(err => {
+      console.log(err)
       toastr.error('Fail!', 'Please use another email address to register.');
     });
   }

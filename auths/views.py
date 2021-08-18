@@ -84,9 +84,7 @@ class UserSingUpView(APIView):
                 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         data = serializer.validated_data
         try:
-            user = User.objects.create(
-                email=data['email'], first_name=data['first_name'], username=data['username'].lower(),
-                last_name=data['last_name'], bio=data['bio'])
+            user = User.objects.create(username=data['username'].lower(), email=data['email'])
             user.set_password(data['password'])
             user.save()
         except IntegrityError as e:
@@ -103,9 +101,8 @@ class UserSingUpView(APIView):
 
         if os.getenv('TEST') is False:
             try:
-                name = user.first_name + ' ' + user.last_name
                 message_body = ({
-                    'name': name,
+                    'name': user.username,
                     'email_verification_url': email_verification_url
                 })
                 message = get_template('email_verification.html').render(message_body)
@@ -138,6 +135,40 @@ class EmailVerificationView(APIView):
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ResendEmailView(APIView):
+    permission_classes = (permissions.AllowAny,)
+
+    @staticmethod
+    def post(request):
+        email = request.data['email']
+
+        user = User.objects.filter(email=email)
+        if user:
+            email_verification_url = '%s/api/auth/email_verification?uid=%s&token=%s' % (
+                request.build_absolute_uri('/')[:-1],
+                urlsafe_base64_encode(force_bytes(user.pk)),
+                TokenGenerator().make_token(user)
+            )
+
+            try:
+                message_body = ({
+                    'name': user.username,
+                    'email_verification_url': email_verification_url
+                })
+                message = get_template('email_verification.html').render(message_body)
+                email = EmailMessage(
+                    'Email verification', message, to=[user.email]
+                )
+                email.content_subtype = 'html'
+                email.send()
+            except Exception:
+                pass
+
+            return Response(data='Successfully sent', status=status.HTTP_200_OK)
+        else:
+            return Response(data='No such user', status=status.HTTP_400_BAD_REQUEST)
 
 
 class ForgotPasswordView(APIView):

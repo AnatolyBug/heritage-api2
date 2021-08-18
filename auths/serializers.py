@@ -1,8 +1,9 @@
 import os
-from rest_framework import serializers
+from rest_framework import serializers, status
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import authenticate
 from django.utils.six import text_type
+from rest_framework.response import Response
 # from .constants import ACCOUNT_NOT_FOUND
 from .models import User
 from utils.aws import generate_aws_url
@@ -10,9 +11,10 @@ from django.core.validators import RegexValidator
 
 
 username_validator = RegexValidator("^[a-zA-Z0-9_.-]{4,25}$",
-                                        "username can only contain alphanumeric characters, ., _,-")
+                                    "username can only contain alphanumeric characters, ., _,-")
 password_validator = RegexValidator("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,32}$",
-                                        "password must contain at least an Uppercase, lowercase and a number")
+                                    "password must contain at least an Uppercase, lowercase and a number")
+
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
@@ -23,6 +25,9 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         # if self.user is None:
         #     raise serializers.ValidationError(ACCOUNT_NOT_FOUND)
+
+        if not self.user.email_confirmed:
+            raise serializers.ValidationError('email_verification')
 
         refresh = self.get_token(self.user)
 
@@ -68,9 +73,6 @@ class CustomerUserSerializer(serializers.ModelSerializer):
 class PutUserSerializer(serializers.Serializer):
     email = serializers.EmailField()
     username = serializers.CharField(validators=[username_validator])
-    first_name = serializers.CharField(allow_blank=True)
-    last_name = serializers.CharField(allow_blank=True)
-    bio = serializers.CharField(allow_blank=True)
 
 
 class CreateUserSerializer(PutUserSerializer):
