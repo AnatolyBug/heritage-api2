@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { connect } from "react-redux";
 import { Redirect } from "react-router";
+import { useHistory } from "react-router-dom";
 import { toastr } from "react-redux-toastr";
 import { makeStyles } from "@material-ui/core/styles";
 import IconButton from '@material-ui/core/IconButton';
@@ -23,6 +24,7 @@ const useStyles = makeStyles(styles);
 
 const LoginPage = (props) => {
   const classes = useStyles();
+  const history = useHistory();
   // const [cardAnimation, setCardAnimation] = useState("cardHidden");
   const [values, setValues] = useState({
     email: '',
@@ -77,9 +79,17 @@ const LoginPage = (props) => {
     }
 
     props.login(values.email, values.password)
+      .then(res => {
+        console.log(res)
+      })
       .catch((err) => {
-        console.log(err)
-        toastr.error('Fail!', 'Please check your email and password.')
+        console.log(err.response.data.non_field_errors[0])
+        if (err.response.data.non_field_errors[0] === 'email_verification') {
+          toastr.warning('Warning!', 'Please verify your email address.')
+          history.push('/login/email_verification')
+        } else {
+          toastr.error('Fail!', 'Please check your email and password.')
+        }
       })
   };
 

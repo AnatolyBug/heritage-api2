@@ -1,8 +1,9 @@
 import os
-from rest_framework import serializers
+from rest_framework import serializers, status
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import authenticate
 from django.utils.six import text_type
+from rest_framework.response import Response
 # from .constants import ACCOUNT_NOT_FOUND
 from .models import User
 from utils.aws import generate_aws_url
@@ -24,6 +25,9 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         # if self.user is None:
         #     raise serializers.ValidationError(ACCOUNT_NOT_FOUND)
+
+        if not self.user.email_confirmed:
+            raise serializers.ValidationError('email_verification')
 
         refresh = self.get_token(self.user)
 
