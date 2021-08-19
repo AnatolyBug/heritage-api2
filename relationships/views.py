@@ -103,6 +103,10 @@ class RelationshipViewSet(viewsets.ViewSet):
         else:
             return Response({'error': 'The requests are incorrect.'}, status=status.HTTP_400_BAD_REQUEST)
 
+
+class RelationshipAdminViewSet(viewsets.ViewSet):
+    permission_classes = (permissions.IsAuthenticated,)
+
     @staticmethod
     def get_object(pk):
         try:
@@ -111,10 +115,22 @@ class RelationshipViewSet(viewsets.ViewSet):
             raise Http404
 
     @staticmethod
+    def list(request):
+        user_id = request.user.id
+        user_role = request.user.user_role
+
+        if user_role == 'superuser' or user_role == 'admin':
+            relationships = Relationships.objects.order_by('-updated_at')
+            data = RelationshipSerializer(relationships, many=True).data
+            return Response({'data': data}, status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    @staticmethod
     def destroy(request, pk):
         user_role = request.user.user_role
         if user_role == 'superuser' or user_role == 'admin':
-            relationship = RelationshipViewSet.get_object(pk)
+            relationship = RelationshipAdminViewSet.get_object(pk)
             relationship.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:

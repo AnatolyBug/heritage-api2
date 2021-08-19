@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from .models import User
 from utils.auth import TokenGenerator
 from utils.aws import upload_file_to_aws
-from constants import TEST
+from django.conf import settings
 from .serializers import MyTokenObtainPairSerializer, UserSerializer, CreateUserSerializer, ChangePasswordSerializer
 
 
@@ -102,7 +102,7 @@ class UserSingUpView(APIView):
             TokenGenerator().make_token(user)
         )
 
-        if not TEST:
+        if not settings.TEST:
             try:
                 message_body = ({
                     'name': user.username,
@@ -118,7 +118,7 @@ class UserSingUpView(APIView):
                 pass
 
         response = UserSerializer(user).data
-        response['email_verification_url'] = email_verification_url if TEST else ''
+        response['email_verification_url'] = email_verification_url if settings.TEST else ''
 
         return Response(data=response, status=status.HTTP_201_CREATED)
 
@@ -155,7 +155,7 @@ class ResendEmailView(APIView):
                 TokenGenerator().make_token(user)
             )
 
-            if not TEST:
+            if not settings.TEST:
                 try:
                     message_body = ({
                         'name': user.username,
@@ -169,7 +169,11 @@ class ResendEmailView(APIView):
                     email.send()
                 except Exception:
                     pass
-            return Response(data='Successfully sent', status=status.HTTP_200_OK)
+
+            data = {'result': 'Successfully sent'}
+            data['email_verification_url'] = email_verification_url if settings.TEST else ''
+            return Response(data=data, status=status.HTTP_200_OK)
+
         elif user and user.email_confirmed:
             return Response(data='verified', status=status.HTTP_400_BAD_REQUEST)
         else:
@@ -191,7 +195,7 @@ class ForgotPasswordView(APIView):
                 TokenGenerator().make_token(user)
             )
 
-            if not os.getenv('TEST'):
+            if not settings.TEST:
                 try:
                     name = user.first_name + ' ' + user.last_name
                     message_body = ({
@@ -206,8 +210,10 @@ class ForgotPasswordView(APIView):
                     email.send()
                 except Exception:
                     pass
-            return Response(data={'password_reset_url': password_reset_url},
-                            status=status.HTTP_200_OK)
+
+            data = {'result': 'Successfully sent'}
+            data['password_reset_url'] = password_reset_url if settings.TEST else ''
+            return Response(data=data, status=status.HTTP_200_OK)
         elif user and not user.email_confirmed:
             return Response(data='unverified', status=status.HTTP_403_FORBIDDEN)
         else:
