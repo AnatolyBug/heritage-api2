@@ -2,7 +2,7 @@ import React from "react";
 import { toastr } from "react-redux-toastr";
 import { useHistory } from "react-router-dom";
 import { makeStyles } from "@material-ui/core/styles";
-import FormHelperText from "@material-ui/core/FormHelperText";
+// import FormHelperText from "@material-ui/core/FormHelperText";
 import GridContainer from "components/Grid/GridContainer.js";
 import GridItem from "components/Grid/GridItem.js";
 import Card from "components/Card/Card.js";
@@ -18,17 +18,21 @@ export default function EmailVerificationPage() {
 
   const handleResend = () => {
     let email = localStorage.getItem('email');
+
     ApiHelper.post('/api/auth/resend_email/', {
       email: email
-    }, {}, false).then(res => {
-      if (res.data.Status) {
-        toastr.success('Success!', 'Please check your email');
-      } else {
-        toastr.warning('Warning!', 'Your email has been already verified.');
+    }, {}, false).then(() => {
+      toastr.success('Success!', 'Please check your email');
+    }).catch(err => {
+      if (err.response.data === 'verified'){
+        toastr.warning('Warning!', 'Your email address has already verified.');
         history.push('/login');
+      } else if (err.response.data === 'no_user') {
+        toastr.warning('Warning!', 'No such user, please register.');
+        history.push('/register');
+      } else {
+        toastr.error('Fail!', 'Failed to resend email');
       }
-    }).catch(() => {
-      toastr.error('Fail!', 'Failed to resend email');
     });
   }
 
@@ -42,12 +46,12 @@ export default function EmailVerificationPage() {
               <GridContainer justify="center">
                 <GridItem xs={12} sm={8} md={8}>
                   <form className={classes.form}>
-                    <FormHelperText>
+                    <p className={classes.center}>
                       Email has been sent to you, please follow the link in the email to verify your email.
-                    </FormHelperText>
+                    </p>
                     <div className={classes.center}>
                       <span>You didn&apos;t receive an email? </span>
-                      <a onClick={handleResend}>Resend email</a>
+                      <a style={{'cursor': 'pointer'}} onClick={handleResend}>Resend email</a>
                     </div>
                   </form>
                 </GridItem>

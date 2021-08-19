@@ -162,7 +162,7 @@ const LoginPage = (props) => {
                           Log in
                         </Button>
                         <div>
-                          <a href="/forgot_password"> Forgot Password?</a>
+                          <a href="/login/forgot_password">Forgot Password?</a>
                         </div>
                         <div>
                           Don&apos;t you have an account? Please
