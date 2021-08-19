@@ -115,7 +115,7 @@ class UserSingUpView(APIView):
                 pass
 
         response = UserSerializer(user).data
-        response['email_verification_url'] = email_verification_url
+        response['email_verification_url'] = email_verification_url if os.getenv('TEST') else ''
 
         return Response(data=response, status=status.HTTP_201_CREATED)
 
@@ -144,7 +144,7 @@ class ResendEmailView(APIView):
     def post(request):
         email = request.data['email']
 
-        user = User.objects.filter(email=email)
+        user = User.objects.filter(email=email).first()
         if user:
             email_verification_url = '%s/api/auth/email_verification?uid=%s&token=%s' % (
                 request.build_absolute_uri('/')[:-1],
@@ -152,21 +152,25 @@ class ResendEmailView(APIView):
                 TokenGenerator().make_token(user)
             )
 
-            try:
-                message_body = ({
-                    'name': user.username,
-                    'email_verification_url': email_verification_url
-                })
-                message = get_template('email_verification.html').render(message_body)
-                email = EmailMessage(
-                    'Email verification', message, to=[user.email]
-                )
-                email.content_subtype = 'html'
-                email.send()
-            except Exception:
-                pass
+            if os.getenv('TEST') is False:
+                try:
+                    message_body = ({
+                        'name': user.username,
+                        'email_verification_url': email_verification_url
+                    })
+                    message = get_template('email_verification.html').render(message_body)
+                    email = EmailMessage(
+                        'Email verification', message, to=[user.email]
+                    )
+                    email.content_subtype = 'html'
+                    email.send()
+                except Exception:
+                    pass
 
-            return Response(data='Successfully sent', status=status.HTTP_200_OK)
+            response = UserSerializer(user).data
+            response['email_verification_url'] = email_verification_url if os.getenv('TEST') else ''
+
+            return Response(data=response, status=status.HTTP_200_OK)
         else:
             return Response(data='No such user', status=status.HTTP_400_BAD_REQUEST)
 
