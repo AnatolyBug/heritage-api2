@@ -23,8 +23,8 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             'password': attrs['password'],
         })
 
-        # if self.user is None:
-        #     raise serializers.ValidationError(ACCOUNT_NOT_FOUND)
+        if self.user is None:
+            raise serializers.ValidationError('register')
 
         if not self.user.email_confirmed:
             raise serializers.ValidationError('email_verification')
