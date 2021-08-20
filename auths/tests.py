@@ -9,13 +9,11 @@ class UserViewsTest(TestCase):
 
     def bad_user_dict(self):
         return dict(
-            email='bad@user.com', username='', first_name='Test', last_name='User', password='', bio='abc'
-        )
+            email='bad@user.com', username='', password='')
 
     def user_dict(self):
         return dict(
-            email='test@user.com', username='Testuser', first_name='Test',
-            last_name='User', password='Testuser123', bio='abc')
+            email='test@user.com', username='Testuser', password='Testuser123')
 
     @classmethod
     def setUpTestData(cls):
@@ -31,11 +29,6 @@ class UserViewsTest(TestCase):
         self.assertEqual(response_create.status_code, 201)
         assert User.objects.filter(username=self.user_dict()['username'].lower()).count() == 1
 
-        email_verification_url = response_create.data['email_verification_url']
-        response_verify = self.client.get(email_verification_url)
-        self.assertEqual(response_verify.status_code, 204)
-        assert User.objects.filter(email_confirmed=True).count() == 1
-
         response_create_bad = self.client.post('/api/auth/register/', data=self.bad_user_dict())
         self.assertEqual(response_create_bad.status_code, 400)
         self.assertContains(response_create_bad, 'This field may not be blank', status_code=400)
@@ -48,8 +41,24 @@ class UserViewsTest(TestCase):
         self.assertContains(response_create_bad, "password must contain at least an Uppercase, lowercase and a number",
                             status_code=400)
 
+    def test_verify_email(self):
+        response_create = self.client.post('/api/auth/register/', data=self.user_dict())
+        response_create = self.client.post('/api/auth/resend_email/', data={'email':
+                                                                                self.user_dict()['email']})
+        email_verification_url = response_create.data['email_verification_url']
+        response_verify = self.client.get(email_verification_url, follow=False)
+        self.assertRedirects(response_verify, "/login", status_code=302, fetch_redirect_response=False)
+        assert User.objects.filter(email_confirmed=True).count() == 1
+
     def test_login(self):
         rv = self.client.post('/api/auth/register/', data=self.user_dict())
+        email_verification_url = rv.data['email_verification_url']
+        #Expect to fail, as user hasn't verified email yet
+        rv_login = self.client.post('/api/auth/login/', data=dict(email=self.user_dict()['email'],
+                                                                  password=self.user_dict()['password']))
+        self.assertEqual(rv_login.status_code, 400)
+
+        response_verify = self.client.get(email_verification_url)
         rv_login = self.client.post('/api/auth/login/', data=dict(email=self.user_dict()['email'],
                                                                   password=self.user_dict()['password']))
         self.assertEqual(rv_login.status_code, 200)
@@ -65,7 +74,15 @@ class UserViewsTest(TestCase):
     def test_forgot_password(self):
         rv = self.client.post('/api/auth/register/', data=self.user_dict())
         rv_forgot_pwd = self.client.post('/api/auth/forgot_password/', data=dict(email=self.user_dict()['email']))
+        #Haven't verified email yet
+        self.assertEqual(rv_forgot_pwd.status_code, 403)
+
+        email_verification_url = rv.data['email_verification_url']
+        response_verify = self.client.get(email_verification_url, follow=False)
+
+        rv_forgot_pwd = self.client.post('/api/auth/forgot_password/', data=dict(email=self.user_dict()['email']))
         self.assertEqual(rv_forgot_pwd.status_code, 200)
+
 
         password_reset_url = rv_forgot_pwd.data['password_reset_url']
         rv_change_pwd = self.client.post('/api/auth/reset_password/',
@@ -80,11 +97,16 @@ class UserViewsTest(TestCase):
 
     def test_put(self):
         rv = self.client.post('/api/auth/register/', data=self.user_dict())
+        email_verification_url = rv.data['email_verification_url']
+        response_verify = self.client.get(email_verification_url, follow=False)
         rv_login = self.client.post('/api/auth/login/', data=dict(email=self.user_dict()['email'],
                                                                   password=self.user_dict()['password']))
 
         user_updated = self.user_dict()
         user_updated['file'] = ''
+        user_updated['first_name'] = ''
+        user_updated['last_name'] = ''
+        user_updated['bio'] = ''
         user_updated['username'] = 'alreadyexists'
 
         auth_headers = {'HTTP_AUTHORIZATION': 'Bearer ' + rv_login.data['access']}
@@ -101,6 +123,8 @@ class UserViewsTest(TestCase):
 
     def test_destroy(self):
         rv = self.client.post('/api/auth/register/', data=self.user_dict())
+        email_verification_url = rv.data['email_verification_url']
+        response_verify = self.client.get(email_verification_url, follow=False)
         rv_login = self.client.post('/api/auth/login/', data=dict(email=self.user_dict()['email'],
                                                                   password=self.user_dict()['password']))
         auth_headers = {'HTTP_AUTHORIZATION': 'Bearer ' + rv_login.data['access']}
@@ -110,6 +134,8 @@ class UserViewsTest(TestCase):
 
     def test_change_password(self):
         rv = self.client.post('/api/auth/register/', data=self.user_dict())
+        email_verification_url = rv.data['email_verification_url']
+        response_verify = self.client.get(email_verification_url, follow=False)
         rv_login = self.client.post('/api/auth/login/', data=dict(email=self.user_dict()['email'],
                                                                   password=self.user_dict()['password']))
         auth_headers = {'HTTP_AUTHORIZATION': 'Bearer ' + rv_login.data['access']}
