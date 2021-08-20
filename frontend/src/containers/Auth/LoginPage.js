@@ -83,10 +83,12 @@ const LoginPage = (props) => {
         console.log(res)
       })
       .catch((err) => {
-        console.log(err.response.data.non_field_errors[0])
         if (err.response.data.non_field_errors[0] === 'email_verification') {
           toastr.warning('Warning!', 'Please verify your email address.')
           history.push('/login/email_verification')
+        } else if (err.response.data.non_field_errors[0] === 'register') {
+          toastr.warning('Warning!', 'Please register.')
+          history.push('/register')
         } else {
           toastr.error('Fail!', 'Please check your email and password.')
         }
