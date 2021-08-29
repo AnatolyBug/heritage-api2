@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-pf9s!x5$(#sp5r52db=2qvuj4-sq&#%@5b_t*q_tt(%7s91dvo
 DEBUG = True
 
 #Testing is False by default
-TEST = False
+TEST = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -44,8 +44,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+
     # Installed Apps
     'rest_framework',
+    'drf_yasg',
     'corsheaders',
     'users',
     'auths',

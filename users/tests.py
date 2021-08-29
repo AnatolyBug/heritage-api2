@@ -11,9 +11,10 @@ from auths.models import User
 class UsersViewsTest(APITestCase):
 
     def setUp(self):
-        user = dict(id=100, email='test@user.com', username='Testuser', first_name='Test',
-                    last_name='User', password='Testuser123', bio='abc')
+        user = dict(id=100, email='test@user.com', username='Testuser', password='Testuser123')
         rv = self.client.post('/api/auth/register/', data=user)
+        email_verification_url = rv.data['email_verification_url']
+        response_verify = self.client.get(email_verification_url, follow=False)
         rv = self.client.post('/api/auth/login/', data=dict(email=user['email'], password=user['password']))
         self.auth_headers = {'HTTP_AUTHORIZATION': 'Bearer ' + rv.data['access']}
         #self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + rv.data['access'])
@@ -30,8 +31,7 @@ class UsersViewsTest(APITestCase):
                                 password='TestPassword123')
 
     def superuser(self):
-        return dict(email=f'admin@example.com', username=f'adminuser', password='TestPassword123',
-                    first_name='Admin', last_name='Adminov', bio='')
+        return dict(email=f'admin@example.com', username=f'adminuser', password='TestPassword123')
 
     def user_updated(self):
         return dict(email='newemail@user.com', username='newusername', first_name='New',

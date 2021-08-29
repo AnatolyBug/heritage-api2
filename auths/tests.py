@@ -103,11 +103,8 @@ class UserViewsTest(TestCase):
                                                                   password=self.user_dict()['password']))
 
         user_updated = self.user_dict()
-        user_updated['file'] = ''
-        user_updated['first_name'] = ''
-        user_updated['last_name'] = ''
         user_updated['bio'] = ''
-        user_updated['username'] = 'alreadyexists'
+        user_updated['username'] = 'alreadyexists'  # see setUpTestData
 
         auth_headers = {'HTTP_AUTHORIZATION': 'Bearer ' + rv_login.data['access']}
         with transaction.atomic():

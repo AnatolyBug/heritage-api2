@@ -15,16 +15,16 @@ class User(AbstractUser):
     bio = models.CharField(max_length=255, blank=True)
     user_role = models.CharField(max_length=10, default='customer')
     email_confirmed = models.BooleanField(default=False)
-    email_verification_id = models.CharField(max_length=30, blank=True)
-    # saved_places = models.ManyToManyField('places.Places', related_name='place')
+    #email_verification_id = models.CharField(max_length=30, blank=True)
+    avatar_filename = models.URLField(default='default_avatar.png', blank=True)
 
-    # No Guide models yet
-    # saved_guides = models.ManyToManyField(Place, related_name='guide')
-    avatar_url = models.URLField(default='default_avatar.png', blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     created_date = models.DateTimeField(auto_now_add=True)
     objects = UserManager()
+
+    # saved_places = models.ManyToManyField('places.Places', related_name='place')
+    # saved_guides = models.ManyToManyField(Place, related_name='guide')
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []  # Email & Password are required by default.

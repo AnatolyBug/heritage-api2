@@ -3,7 +3,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from auths.models import User
-from auths.serializers import UserSerializer, CustomerUserSerializer
+from auths.serializers import UserSerializer, UserSerializer
 
 
 class UserViewSet(viewsets.ViewSet):
@@ -52,7 +52,7 @@ class UserViewSet(viewsets.ViewSet):
                 if not user.is_active:
                     return Response(data='Not Found', status=status.HTTP_404_NOT_FOUND)
                 else:
-                    serializer = CustomerUserSerializer(user)
+                    serializer = UserSerializer(user)
                     return Response(data=serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(data='Not Found', status=status.HTTP_404_NOT_FOUND)
