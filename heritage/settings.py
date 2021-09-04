@@ -53,7 +53,6 @@ INSTALLED_APPS = [
     'auths',
     'places',
     'guides',
-    'travels',
     'relationships',
     'search',
     'comments'
