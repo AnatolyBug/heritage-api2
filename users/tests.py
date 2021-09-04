@@ -11,7 +11,7 @@ from auths.models import User
 class UsersViewsTest(APITestCase):
 
     def setUp(self):
-        user = dict(id=100, email='test@user.com', username='Testuser', password='Testuser123')
+        user = dict(email='test@user.com', username='Testuser', password='Testuser123')
         rv = self.client.post('/api/auth/register/', data=user)
         email_verification_url = rv.data['email_verification_url']
         response_verify = self.client.get(email_verification_url, follow=False)
@@ -29,13 +29,6 @@ class UsersViewsTest(APITestCase):
                                 first_name=f'First Name {str(user_id)}',
                                 last_name=f'Surname {str(user_id)}',
                                 password='TestPassword123')
-
-    def superuser(self):
-        return dict(email=f'admin@example.com', username=f'adminuser', password='TestPassword123')
-
-    def user_updated(self):
-        return dict(email='newemail@user.com', username='newusername', first_name='New',
-                            last_name='User', bio='')
 
 
     def test_list(self):
