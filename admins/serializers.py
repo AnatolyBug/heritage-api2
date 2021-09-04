@@ -3,15 +3,14 @@ from auths.models import User
 from rest_framework import serializers
 
 
-class SingleUserListSerializer(BaseUserSerializer):
+class AdminSingleUserListSerializer(BaseUserSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'first_name', 'last_name', 'bio', 'avatar_url')
+        fields = '__all__'
 
 
-class UserListSerializer(serializers.Serializer):
-    data = SingleUserListSerializer(many=True)
+class AdminUserListSerializer(serializers.Serializer):
+    data = AdminSingleUserListSerializer(many=True)
     next_page = serializers.BooleanField()
     previous_page = serializers.BooleanField()
     total = serializers.IntegerField()
-

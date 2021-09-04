@@ -43,7 +43,7 @@ class ChangePasswordSerializer(serializers.Serializer):
     new_password = serializers.CharField(required=True, validators=[password_validator])
 
 class ResendEmailSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True)#
+    email = serializers.EmailField(required=True)
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
@@ -54,7 +54,7 @@ class ResetPasswordSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
     password = serializers.CharField(required=True, validators=[password_validator])
 
-class UserSerializer(serializers.ModelSerializer):
+class BaseUserSerializer(serializers.ModelSerializer):
     avatar_url = serializers.SerializerMethodField()
 
     def get_avatar_url(self, obj):
@@ -62,10 +62,11 @@ class UserSerializer(serializers.ModelSerializer):
         content_type = 'image/png'
         return generate_aws_url(key=obj.avatar_filename, bucket=bucket_name, content_type=content_type)
 
+class UserSerializer(BaseUserSerializer):
     class Meta:
         model = User
         fields = ('id', 'email', 'username', 'user_role', 'first_name',
-                  'last_name', 'bio', 'avatar_url', 'created_date')
+                           'last_name', 'bio', 'avatar_url', 'created_date')
 
 
 class PutUserSerializer(serializers.Serializer):

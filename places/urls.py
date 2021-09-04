@@ -8,8 +8,7 @@ router.register('price_category', views.PriceCategoriesViewSet, basename='price_
 router.register('', views.PlacesViewSet, basename='place')
 
 urlpatterns = [
-    # path('place/', views.PlaceView.as_view(), name='place'),
-    # path('place/<place_id>', views.PlaceView.as_view(), name='place')
+
 ]
 
 urlpatterns += router.urls

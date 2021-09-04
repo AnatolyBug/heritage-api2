@@ -5,9 +5,8 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from auths.models import User
-from auths.serializers import UserSerializer, PutUserSerializer
+from auths.serializers import UserSerializer
 from users.serializers import UserListSerializer
-from auths.views import UserInfoAPIView
 
 
 class UserViewSet(viewsets.ViewSet):
@@ -16,8 +15,10 @@ class UserViewSet(viewsets.ViewSet):
     user_param = openapi.Parameter('user_id', openapi.IN_PATH, description="user id", type=openapi.TYPE_INTEGER)
 
     @swagger_auto_schema(manual_parameters=[page_param],
+                         operation_description='List all users',
                          responses={"200": UserListSerializer})
     def list(self, request):
+        """Currently used for search"""
         user_id = request.user.id
         user_role = request.user.user_role
 
