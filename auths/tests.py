@@ -125,9 +125,23 @@ class UserViewsTest(TestCase):
         rv_login = self.client.post('/api/auth/login/', data=dict(email=self.user_dict()['email'],
                                                                   password=self.user_dict()['password']))
         auth_headers = {'HTTP_AUTHORIZATION': 'Bearer ' + rv_login.data['access']}
-        rv = self.client.delete('/api/auth/user/', **auth_headers)
+        rv = self.client.get('/api/auth/user/', **auth_headers)
+        _id = rv.data['id']
+        rv = self.client.delete('/api/auth/user/'+str(_id), **auth_headers)
         assert User.objects.filter(is_active=False).count() == 1
-        #self.assertEqual(rv_login.status_code, 204)
+        self.assertEqual(rv.status_code, 204)
+
+    def test_get(self):
+        rv = self.client.post('/api/auth/register/', data=self.user_dict())
+        email_verification_url = rv.data['email_verification_url']
+        response_verify = self.client.get(email_verification_url, follow=False)
+        rv_login = self.client.post('/api/auth/login/', data=dict(email=self.user_dict()['email'],
+                                                                  password=self.user_dict()['password']))
+        auth_headers = {'HTTP_AUTHORIZATION': 'Bearer ' + rv_login.data['access']}
+        rv = self.client.get('/api/auth/user/', **auth_headers)
+        self.assertEqual(rv.status_code, 200)
+        self.assertContains(rv, 'id')
+
 
     def test_change_password(self):
         rv = self.client.post('/api/auth/register/', data=self.user_dict())

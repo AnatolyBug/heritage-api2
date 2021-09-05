@@ -29,13 +29,15 @@ from .serializers import MyTokenObtainPairSerializer, UserSerializer, CreateUser
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
-
-class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView, generics.DestroyAPIView):
+class UserInfoAPIView(APIView):
+    http_method_names = ['get', 'post', 'put', 'delete']
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = UserSerializer
 
-    def get_object(self):
-        return self.request.user
+    @swagger_auto_schema(request_body=PutUserSerializer, operation_description='User to view their profile',
+                         responses={"200": serializer_class})
+    def get(self, pk):
+        return Response(data=self.serializer_class(self.request.user).data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(request_body=PutUserSerializer,
                          responses={"200": serializer_class, "400": ''},
@@ -68,14 +70,18 @@ class UserInfoAPIView(generics.RetrieveAPIView, generics.UpdateAPIView, generics
         except IntegrityError:
             return Response({'error': 'Username already exists'}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(data=self.get_serializer(request.user).data, status=status.HTTP_200_OK)
+        return Response(data=self.serializer_class(request.user).data, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(operation_description='User to delete his profile')
-    def destroy(self, request, *args, **kwargs):
-        user = request.user
-        user.is_active = False
-        user.save()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    @swagger_auto_schema(operation_description='User or Admin to delete profile')
+    def delete(self, request, pk=None):
+        user = User.objects.filter(pk=pk, is_active=True).first()
+        if not user:
+            Response({'error': 'no such user'}, status=status.HTTP_400_BAD_REQUEST)
+        if user.id == request.user.id or request.user.is_staff:
+            user.is_active = False
+            user.save()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserSingUpView(APIView):
@@ -109,7 +115,6 @@ class UserSingUpView(APIView):
         email_verification_url = '%s/api/auth/email_verification?uid=%s&token=%s' % (
             request.build_absolute_uri('/')[:-1],
             urlsafe_base64_encode(force_bytes(user.pk)),
-            #Question - is this token safe?
             TokenGenerator().make_token(user)
         )
 

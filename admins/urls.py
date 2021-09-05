@@ -5,8 +5,6 @@ from admins import views
 router = DefaultRouter()
 router.register('users', views.AdminUserViewSet, basename='place_type')
 
-urlpatterns = [
-
-]
+urlpatterns = []
 
 urlpatterns += router.urls

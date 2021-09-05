@@ -1,7 +1,6 @@
 from rest_framework.test import APITestCase, override_settings
 from django.db import connection, transaction
 import pandas as pd
-import json
 
 
 from auths.models import User
@@ -43,13 +42,14 @@ class UsersViewsTest(APITestCase):
         self.assertFalse(rv.data['next_page'])
 
     def test_retrieve(self):
-        #User 444 id shouldn't exist
+        # User 444 id shouldn't exist
         rv = self.client.get('/api/users/444/', **self.auth_headers)
         self.assertEqual(rv.status_code, 404)
 
-        id = User.objects.get(username='username1').id
-        rv = self.client.get('/api/users/'+str(id)+'/', **self.auth_headers)
+        _id = User.objects.get(username='username1').id
+        rv = self.client.get('/api/users/'+str(_id)+'/', **self.auth_headers)
         self.assertEqual(rv.status_code, 200)
+        self.assertContains(rv, 'username1')
 
     '''
 
